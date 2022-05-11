@@ -1,18 +1,12 @@
 #include <Arduino.h>
+#include <BLE_function.h>
 #include <sensor_function.h>
+#include <IO_function.h>
+#include <Kernel_IO_function.h>
 //#include <Wire.h>
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-
-#define bleServerName "FPT_HC_IoTS_BTempHRate01-1E9E"
-#define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
-#define CHARACTERISTIC_UUID "9d45a73a-b19f-4739-8339-ecad527b4455"
 
 #define SCREEN_WIDTH 128    // OLED display width, in pixels
 #define SCREEN_HEIGHT 64    // OLED display height, in pixels
@@ -23,65 +17,35 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-/* BLE Variable */
-BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
-
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-
 //uint8_t value[] = "HR:xxx,SPO2:xx,TEMP:xx";
 char value[] = "HR:%d,SPO2:%d,TEMP:%d";
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      deviceConnected = true;
-    };
-
-    void onDisconnect(BLEServer* pServer) {
-      deviceConnected = false;
-    }
-};
 /* Temp varialble */
 double temp_obj;
-
 /* Heartbeat varialble */
 int beatAvg = 0;
-
 /* SPO2 varialble */
 int oxygen;
 
-void BLE_Setup(void);
+/*  IO Variable */
+extern IO_Struct pLED1, pLED1, pLED3;
+structIO_Manage_Output strLED_1, strLED_2, strLED_3;
+extern IO_Struct pBUT_1, pBUT_2, pBUT_3;
+structIO_Button strIO_Button_Value, strOld_IO_Button_Value;
+
 void OLED_Display(double temp, int heartBeat, int32_t SPO2);
 
 void task_Temp(void *parameter) {
   for(;;) {
     temp_obj = mlx_getTemp();
     OLED_Display(temp_obj, beatAvg, oxygen);
-
-    if (deviceConnected) 
+    sprintf(value, "HR:%d,SPO2:%d,TEMP:%d", beatAvg, oxygen, temp_obj);
+    if(beatAvg > 99)
     {
-      /*
-      value[3] = beatAvg/100 + 48;
-      value[4] = (beatAvg - ((value[3]-48)*100))/10 + 48;
-      value[5] = beatAvg%10 + 48;
-
-      value[12] = oxygen/10 + 48;
-      value[13] = oxygen%10 + 48;
-
-      value[20] = (int)temp_obj/10 + 48;
-      value[21] = (int)temp_obj%10 + 48;
-      */
-      sprintf(value, "HR:%d,SPO2:%d,TEMP:%d", beatAvg, oxygen, (int)temp_obj);
-      if(beatAvg>99){
-        pCharacteristic->setValue((uint8_t*)&value, sizeof(value) + 1);
-        pCharacteristic->notify();
-      }
-      else{
-        pCharacteristic->setValue((uint8_t*)&value, sizeof(value));
-        pCharacteristic->notify();
-      }
-      
+      BLE_sendData((uint8_t *)&value, sizeof(value) + 1);
+    }
+    else{
+      BLE_sendData((uint8_t *)&value, sizeof(value) + 1);
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
@@ -92,11 +56,34 @@ void task_MAX3010x(void *parameter) {
     MAX30105_getValue(oxygen, beatAvg);
   }
 }
+void task_IO(void *parameter)
+{
+  for(;;) {
+    vIO_Output(&strLED_1, &pLED1);
+	  vIO_Output(&strLED_2, &pLED2);
+	  vIO_Output(&strLED_3, &pLED3);
 
+    /*** Get BT Value  ***/
+    
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  
+
+  LED1_Init(&pLED1);
+  LED2_Init(&pLED2);
+  LED3_Init(&pLED3);
+
+  strIO_Button_Value.bFlagNewButton =  eFALSE;
+  BUTTON1_Init(&pBUT_1);
+  strIO_Button_Value.bButtonState[eButton1] = eButtonRelease;
+  strOld_IO_Button_Value.bButtonState[eButton1] = eButtonRelease;
+  BUTTON2_Init(&pBUT_2);
+  strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
+  strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
+
   sensor_setUp();
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); //initialize with the I2C addr 0x3C (128x64)
  
@@ -116,6 +103,7 @@ void setup() {
   delay(2000);
   xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL); // (hàm thực thi, tên đặt cho hàm, stack size, context đưa vào argument của task, độ ưu tiên của task, reference để điều khiển task)
   xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
+  xTaskCreate(task_IO,"Task 3",8192,NULL,1,NULL);
 }
 
 void loop() {
@@ -123,33 +111,6 @@ void loop() {
   
 }
 
-void BLE_Setup(void)
-{
-  BLEDevice::init(bleServerName);
-  // Create the BLE Server
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-
-  // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  // Create a BLE Characteristic
-  pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID,
-                      BLECharacteristic::PROPERTY_READ   |
-                      BLECharacteristic::PROPERTY_WRITE  |
-                      BLECharacteristic::PROPERTY_NOTIFY |
-                      BLECharacteristic::PROPERTY_INDICATE
-                    );
-  // Start the service
-  pService->start();
-
-  // Start advertising
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
-  BLEDevice::startAdvertising();
-}
 void OLED_Display(double temp, int heartBeat, int32_t SPO2)
 {
   display.clearDisplay();
