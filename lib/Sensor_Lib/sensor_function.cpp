@@ -24,7 +24,7 @@ float beatsPerMinute;
 #define FINGER_ON 3000
 #define MINIMUM_SPO2 0.0
 
-int Num = 100; //calculate SpO2 by this sampling interval
+//int Num = 100; //calculate SpO2 by this sampling interval
 
 int i = 0;
 double avered = 0;
@@ -40,8 +40,8 @@ void sensor_setUp(void)
 {
     if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) //Use default I2C port, 400kHz speed
     {
-        Serial.println("MAX30105 was not found. Please check wiring/power. ");
-        while (1);
+        //Serial.println("MAX30105 was not found. Please check wiring/power. ");
+        //while (1);
     }
     /*
     byte ledBrightness = 0x1F; //Options: 0=Off to 255=50mA
@@ -121,7 +121,7 @@ void MAX30105_getValue(int &oxy, int &Avg)
           oxy = ESpO2;
         }
       }
-      if ((i % Num) == 0)
+      if ((i % 100) == 0)
       {
         double R = (sqrt(sumredrms) / avered) / (sqrt(sumirrms) / aveir);
         // Serial.println(R);

@@ -14,7 +14,7 @@
 			pIO->writeSta=&LED1_WriteStatus;
 		}
 		 /* write function */
-		void LED1_Write(char BitVal)
+		void LED1_Write(enumbool BitVal)
 		{
 			if(BitVal==eTRUE)
 			{
@@ -45,7 +45,7 @@
 			pIO->writeSta=&LED2_WriteStatus;
 		}
 		 /* write function */
-		void LED2_Write(char BitVal)
+		void LED2_Write(enumbool BitVal)
 		{
 			if(BitVal==eTRUE)
 			{
@@ -76,7 +76,7 @@
 			pIO->writeSta=&LED3_WriteStatus;
 		}
 		 /* write function */
-		void LED3_Write(char BitVal)
+		void LED3_Write(enumbool BitVal)
 		{
 			if(BitVal==eTRUE)
 			{
@@ -109,9 +109,9 @@
 			pIO->read=&BUTTON1_Read;
 		}
 			/* write function */
-		char BUTTON1_Read(void)
+		enumbool BUTTON1_Read(void)
 		{
-			return BT1_GPIO_VAL;
+			return (enumbool)BT1_GPIO_VAL;
 		}
 	#endif /*USE_BUTTON_IO_1*/
 
@@ -122,9 +122,9 @@
             BT2_GPIO_INIT;
 			pIO->read=&BUTTON2_Read;
 		}
-		char BUTTON2_Read(void)
+		enumbool BUTTON2_Read(void)
 		{
-			return BT2_GPIO_VAL;
+			return (enumbool)BT2_GPIO_VAL;
 		}
 	#endif /*USE_BUTTON_IO_2*/
 
@@ -137,7 +137,7 @@
         }
         enumbool BUTTON3_Read(void)
         {
-            return BT3_GPIO_VAL;
+            return (enumbool)BT3_GPIO_VAL;
         }
 	#endif /*USE_BUTTON_IO_3*/
 #endif /*USE_BUTTON_IO*/

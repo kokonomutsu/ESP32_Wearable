@@ -13,7 +13,7 @@ void vIO_Output(structIO_Manage_Output *pOutput, IO_Struct *pControl)
 			{
 				pOutput->bFlagStart = eFALSE;
 				pControl->write(pOutput->bStartState);
-				if(pOutput->uCountToggle!=0)
+				if(pOutput->uCountToggle != 0)
 				{
 					pOutput->uCountToggle--;
 				}
@@ -23,38 +23,30 @@ void vIO_Output(structIO_Manage_Output *pOutput, IO_Struct *pControl)
 				if(pOutput->uCountToggle!=0)
 				{
 					pOutput->uCountToggle--;
-					pControl->write(1 - pControl->writeSta());
+					pControl->write((enumbool)(1 - (int)pControl->writeSta()));
 				}
 				else
 				{
-					pControl->write(pOutput->bEndState);
+					//pControl->write(pOutput->bEndState);
+					pOutput->bCurrentProcess = eFALSE;
 				}
-			}
-			if(pOutput->uTimeLine >= pOutput->uFrequency)
-			{
-				pOutput->uTimeLine-= pOutput->uFrequency;
-			}
-			else
-			{
-				pOutput->bCurrentProcess = eFALSE;
-				pOutput->uTimeLine = 0;
-				pControl->write(pOutput->bEndState);
 			}
 		}
 	}
 }
+//vIO_Output in 10ms task
+//Change state: vIO_ConfigOutput(&pOPx, 1, 1, 1, 0);
+//Toggle 500ms: vIO_ConfigOutput(&pOPx, 1, 2, 500/10, 0);
 
-enumbool vIO_ConfigOutput(structIO_Manage_Output *pOutput, unsigned long uFrequency, unsigned long uTimeline, unsigned long uCountToggle, enumbool bStartState, enumbool bEndState, enumbool bFlagInterrupt)
+enumbool vIO_ConfigOutput(structIO_Manage_Output *pOutput, enumbool bStartState, uint32_t uCountToggle, uint32_t uFrequency, enumbool bFlagInterrupt)
 {
 	enumbool bFlagSetParaSucess = eFALSE;
 	if(bFlagInterrupt==eTRUE)
 	{
 		pOutput->bCurrentProcess = eTRUE;
 
-		pOutput->uTimeLine		= uTimeline;
 		pOutput->uFrequency 	= uFrequency;
 		pOutput->uCountToggle 	= uCountToggle;
-		pOutput->bEndState 		= bEndState;
 		pOutput->bStartState 	= bStartState;
 		pOutput->bFlagStart		= eTRUE;
 
@@ -64,14 +56,12 @@ enumbool vIO_ConfigOutput(structIO_Manage_Output *pOutput, unsigned long uFreque
 	}
 	else
 	{
-		if(pOutput->bCurrentProcess == eFALSE)
+		if(pOutput->bCurrentProcess == false)
 		{
 			pOutput->bCurrentProcess = eTRUE;
 
-			pOutput->uTimeLine		= uTimeline;
 			pOutput->uFrequency 	= uFrequency;
 			pOutput->uCountToggle 	= uCountToggle;
-			pOutput->bEndState 		= bEndState;
 			pOutput->bStartState 	= bStartState;
 			pOutput->bFlagStart		= eTRUE;
 

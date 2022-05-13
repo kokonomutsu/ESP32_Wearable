@@ -5,8 +5,8 @@ typedef enum _enumbool{eFALSE=0,eTRUE=!eFALSE} enumbool;
 
 typedef struct
 {
-  	char (*read)(void);
-  	void(*write)(char sta);
+  	enumbool (*read)(void);
+  	void(*write)(enumbool sta);
   	enumbool (*writeSta)(void);
 }IO_Struct;
 

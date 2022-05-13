@@ -6,11 +6,10 @@
 
 typedef struct{
 	unsigned long	uFrequency;
-	unsigned long	uTimeLine;
 	unsigned long	uCountToggle;
 	unsigned long	uCycleCounter;
 	enumbool	    bStartState;
-	enumbool	    bEndState;
+	//enumbool	    bEndState;
 	enumbool	    bCurrentProcess;
 	enumbool	    bFlagStart;
 }structIO_Manage_Output;

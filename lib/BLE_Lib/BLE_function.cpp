@@ -2,8 +2,8 @@
 #include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+//#include <BLEUtils.h>
+//#include <BLE2902.h>
 
 #define bleServerName "FPT_HC_IoTS_BTempHRate01-1E9E"
 #define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
