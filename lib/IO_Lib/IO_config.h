@@ -44,12 +44,12 @@
 /************************INPUT******************************/
 #ifdef USE_BUTTON_IO
 	#ifdef USE_BUTTON_IO_1
-		#define BT1				26
-        #define BT1_GPIO_INIT   pinMode(BT1, INPUT_PULLUP)
+		#define BT1				25
+        #define BT1_GPIO_INIT   pinMode(BT1, INPUT)
 		#define BT1_GPIO_VAL	digitalRead(BT1)
 	#endif
 	#ifdef USE_BUTTON_IO_2
-		#define BT2				25
+		#define BT2				26
         #define BT2_GPIO_INIT   pinMode(BT2, INPUT)
 		#define BT2_GPIO_VAL	digitalRead(BT2)
 	#endif

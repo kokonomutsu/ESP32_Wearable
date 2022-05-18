@@ -89,7 +89,7 @@ enumbool vIO_ConfigOutput(structIO_Manage_Output *pOutput, enumbool bStartState,
 #define COUNT_TIME_SAMPLE		40
 
 /* Static variable about time Press & Release */
-static unsigned long uTimeCheck[NUMBER_IO_BUTTON_USE];
+static unsigned long 	uTimeCheck[NUMBER_IO_BUTTON_USE];
 static unsigned long	uTimePress[NUMBER_IO_BUTTON_USE];
 static unsigned char	bClickCount[NUMBER_IO_BUTTON_USE];
 static unsigned long	bHoldOff[NUMBER_IO_BUTTON_USE];
@@ -195,7 +195,7 @@ void vGetIOButtonValue(eIndexButton bIndex, enumbool InputState, structIO_Button
 				break;
 			}
 		/* Increase counter */
-		uTimePress[bIndex]++;
+		++uTimePress[bIndex];
 	}
 
 	/* Time End period */

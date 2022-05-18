@@ -44,8 +44,8 @@ typedef enum
 }eIndexButton;
 /* Struct manage button */
 typedef struct{
-    eButtonState	bButtonState[NUMBER_IO_BUTTON_USE];/* Button state */
-	unsigned long	bButtonTime[NUMBER_IO_BUTTON_USE];/* Time to hole */
+    eButtonState	bButtonState[(int)NUMBER_IO_BUTTON_USE];/* Button state */
+	unsigned long	bButtonTime[(int)NUMBER_IO_BUTTON_USE];/* Time to hole */
 	enumbool 		bFlagNewButton;
 }structIO_Button;
 #endif
