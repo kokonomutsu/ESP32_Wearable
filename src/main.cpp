@@ -15,13 +15,12 @@
 #define MAX_BRIGHTNESS 255
 #define bufferLength 100
 
+uint8_t value[54] = "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij";
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 bool WorkMode = false;
 bool start = false;
-
-//uint8_t value[] = "HR:xxx,SPO2:xx,TEMP:xx";
-char value[] = "HR:%d,SPO2:%d,TEMP:%d";
 
 /* Temp varialble */
 double temp_obj;
@@ -144,7 +143,7 @@ void setup() {
   display.print("Press Start BT!");
   display.display();
 
-  //BLE_Setup();
+  BLE_Setup();
   delay(1000);
   //wifi_Setup();
   xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
@@ -174,6 +173,15 @@ void loop() {
       SPO2Max = 0;
       AvgMax = 0;
       start = true;
+    }
+  }
+
+  if(BLE_isConnected())
+  {
+    if(Serial.available() > 0)
+    {
+      value[53] = (uint8_t)Serial.read();
+      BLE_sendData((uint8_t*)&value, 54);
     }
   }
 }

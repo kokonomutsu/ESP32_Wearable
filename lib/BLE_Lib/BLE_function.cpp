@@ -29,6 +29,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 void BLE_Setup(void)
 {
   BLEDevice::init(bleServerName);
+  BLEDevice::setMTU(192);
   // Create the BLE Server
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
