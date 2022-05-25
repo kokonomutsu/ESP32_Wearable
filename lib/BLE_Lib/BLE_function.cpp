@@ -17,13 +17,29 @@ bool deviceConnected = false;
 //bool oldDeviceConnected = false;
 
 class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      deviceConnected = true;
-    };
+  void onConnect(BLEServer* pServer) {
+    deviceConnected = true;
+  };
 
-    void onDisconnect(BLEServer* pServer) {
-      deviceConnected = false;
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+  }
+};
+class CharacteristicCallbacks: public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic* pCharacteristic)
+  {
+    std::string value = pCharacteristic->getValue();
+
+    if (value.length() > 0)
+    {
+      Serial.print("New value: ");
+      for (int i = 0; i < value.length(); i++)
+      {
+        Serial.print(value[i]);
+      }
+      Serial.println();
     }
+  }
 };
 
 void BLE_Setup(void)
@@ -44,6 +60,7 @@ void BLE_Setup(void)
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
+  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
   // Start the service
   pService->start();
 
