@@ -8,6 +8,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#include <BLEDevice.h>
+#include "esp_bt_device.h"
+
 #define SCREEN_WIDTH 128    // OLED display width, in pixels
 #define SCREEN_HEIGHT 64    // OLED display height, in pixels
 #define OLED_RESET -1       // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -113,14 +116,40 @@ void task_IO(void *parameter)
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
+
+String getMACinString() {
+  const uint8_t* macAddress = esp_bt_dev_get_address();
+  char charMAC[18];
+
+  sprintf(charMAC, "%02X", (int)macAddress[0]);
+  charMAC[2] = ':';
+  sprintf(charMAC+3, "%02X", (int)macAddress[1]);
+  charMAC[5] = ':';
+
+  sprintf(charMAC+6, "%02X", (int)macAddress[2]);
+  charMAC[8] = ':';
+  sprintf(charMAC+9, "%02X", (int)macAddress[3]);
+  charMAC[11] = ':';
+
+  sprintf(charMAC+12, "%02X", (int)macAddress[4]);
+  charMAC[14] = ':';
+  sprintf(charMAC+15, "%02X", (int)macAddress[5]);
+
+  return (String)charMAC;
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
+  /* BLE setup */
+  Serial.println("[DEBUG]: SYSTEM INIT!");
+  Serial.println("[DEBUG]: LED INIT!");
   LED1_Init(&pLED1);
   LED2_Init(&pLED2);
   LED3_Init(&pLED3);
 
+  Serial.println("[DEBUG]: BUTTON INIT!");
   strIO_Button_Value.bFlagNewButton =  eFALSE;
   BUTTON1_Init(&pBUT_1);
   strIO_Button_Value.bButtonState[eButton1] = eButtonRelease;
@@ -130,6 +159,7 @@ void setup() {
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   
+  Serial.println("[DEBUG]: SENSOR & LCD INIT!");
   sensor_setUp();
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
  
@@ -142,9 +172,12 @@ void setup() {
   display.setTextSize(1);
   display.print("Press Start BT!");
   display.display();
-
+  /* BLE setup */
+  Serial.println("BLE setup!");
   BLE_Setup();
   delay(1000);
+  String myMACString = getMACinString();
+  Serial.println("My MAC address = " + myMACString);
   //wifi_Setup();
   xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
   xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
