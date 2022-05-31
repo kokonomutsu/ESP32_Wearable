@@ -107,7 +107,7 @@ void BLE_Init(void)
   // Create a BLE Characteristic TX
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID_TX,
-                      BLECharacteristic::BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
