@@ -77,101 +77,106 @@ int sersor_getSPO2(void)
 
 void sensor_updateValue(void)
 {
-    static int sampleCnt = 0;
+  static int sampleCnt = 0;
 
-    double SpO2 = 0;
-    int sumhearBeat = 0;
+  double SpO2 = 0;
+  int sumhearBeat = 0;
 
-    particleSensor.check();
-    uint32_t redValue = particleSensor.getFIFOIR();
-    uint32_t irValue = particleSensor.getFIFORed();
-    
-    while(particleSensor.available())
+  particleSensor.check();
+  uint32_t redValue = particleSensor.getFIFOIR();
+  uint32_t irValue = particleSensor.getFIFORed();
+  
+  while(particleSensor.available())
+  {
+    if (checkForBeat(irValue) == true)
     {
-      if (checkForBeat(irValue) == true)
+      //We sensed a beat!
+      unsigned long delta = (unsigned long)(millis() - lastBeat);
+      lastBeat = millis();
+
+      beatsPerMinute = 60 / (delta / 1000.0);
+
+      if (beatsPerMinute < 255 && beatsPerMinute > 20)
       {
-        //We sensed a beat!
-        unsigned long delta = (unsigned long)(millis() - lastBeat);
-        lastBeat = millis();
+        rates[rateSpot++] = (byte)beatsPerMinute;
+        rateSpot %= RATE_SIZE;
 
-        beatsPerMinute = 60 / (delta / 1000.0);
-
-        if (beatsPerMinute < 255 && beatsPerMinute > 20)
+        if(rateSpot == 0)
         {
-          rates[rateSpot++] = (byte)beatsPerMinute;
-          rateSpot %= RATE_SIZE;
-
-          if(rateSpot == 0)
-          {
-            sumhearBeat = 0;
-            for (byte x = 0 ; x < RATE_SIZE ; x++)
-              sumhearBeat += rates[x];
-            hearBeat = sumhearBeat/RATE_SIZE;
-          }
+          sumhearBeat = 0;
+          for (byte x = 0 ; x < RATE_SIZE ; x++)
+            sumhearBeat += rates[x];
+          hearBeat = sumhearBeat/RATE_SIZE;
         }
       }
-
-      sampleCnt++;
-      avered = avered * frate + (double)redValue * (1.0 - frate);
-      aveir = aveir * frate + (double)irValue * (1.0 - frate);
-
-      sumredrms += ((double)redValue - avered) * ((double)redValue - avered);
-      sumirrms += ((double)irValue - aveir) * ((double)irValue - aveir);
-
-      if ((sampleCnt % SAMPLING) == 0)
-      {
-        if (millis() > (unsigned long)TIMETOBOOT)
-        {
-          if (irValue < FINGER_ON){
-            hearBeat = 0;
-            ESpO2 = MINIMUM_SPO2;
-          }
-
-          if (ESpO2 <= -1)
-            ESpO2 = 0;
-          else if (ESpO2 > 100)
-            ESpO2 = 100;
-
-          SPO2Value = ESpO2;
-        }
-      }
-
-      if ((sampleCnt % 100) == 0)
-      {
-        double R = (sqrt(sumredrms) / avered) / (sqrt(sumirrms) / aveir);
-        // Serial.println(R);
-        SpO2 = -23.3 * (R - 0.4) + 100;               //http://ww1.microchip.com/downloads/jp/AppNotes/00001525B_JP.pdf
-        ESpO2 = FSpO2 * ESpO2 + (1.0 - FSpO2) * SpO2; //low pass filter
-
-        sumredrms = 0.0;
-        sumirrms = 0.0;
-        sampleCnt = 0;
-        break;
-      }
-      particleSensor.nextSample();
     }
+
+    sampleCnt++;
+    avered = avered * frate + (double)redValue * (1.0 - frate);
+    aveir = aveir * frate + (double)irValue * (1.0 - frate);
+
+    sumredrms += ((double)redValue - avered) * ((double)redValue - avered);
+    sumirrms += ((double)irValue - aveir) * ((double)irValue - aveir);
+
+    if ((sampleCnt % SAMPLING) == 0)
+    {
+      if (millis() > (unsigned long)TIMETOBOOT)
+      {
+        if (irValue < FINGER_ON){
+          hearBeat = 0;
+          ESpO2 = MINIMUM_SPO2;
+        }
+
+        if (ESpO2 <= -1)
+          ESpO2 = 0;
+        else if (ESpO2 > 100)
+          ESpO2 = 100;
+
+        SPO2Value = ESpO2;
+      }
+    }
+
+    if ((sampleCnt % 100) == 0)
+    {
+      double R = (sqrt(sumredrms) / avered) / (sqrt(sumirrms) / aveir);
+      // Serial.println(R);
+      SpO2 = -23.3 * (R - 0.4) + 100;               //http://ww1.microchip.com/downloads/jp/AppNotes/00001525B_JP.pdf
+      ESpO2 = FSpO2 * ESpO2 + (1.0 - FSpO2) * SpO2; //low pass filter
+
+      sumredrms = 0.0;
+      sumirrms = 0.0;
+      sampleCnt = 0;
+      break;
+    }
+    particleSensor.nextSample();
+  }
 }
 
-bool sensor_processing(int &maxSPO2, int maxHB)
+bool sensor_processing(int &maxSPO2, int &maxHB)
 {
   static int timeout1 = 0;
   static int timeout2 = 0;
 
-  if((maxSPO2 < SPO2Value) && (!spo2Val))
+  if((maxSPO2 < SPO2Value) && (!spo2Val)){
     maxSPO2 = SPO2Value;
+    timeout1 = 0;
+  }
   else if(maxSPO2 == SPO2Value)
     timeout1++;
   else
     spo2Val = true;
 
-  if((maxHB < hearBeat) && (!hearVal))
+  if((maxHB < hearBeat) && (!hearVal)){
     maxHB = hearBeat;
+    timeout2 = 0;
+  }
   else if(maxHB == hearBeat)
     timeout2++;
   else
     hearVal = true;
 
-  if((spo2Val && hearVal) || ((timeout1 > 5) && (timeout2 > 5)) || (hearVal&&(timeout1 > 5)) || (spo2Val&&(timeout2 > 5))){
+  if((spo2Val && hearVal) || ((timeout1 > 10) && (timeout2 > 10)) || (hearVal&&(timeout1 > 10)) || (spo2Val&&(timeout2 > 10)))
+  {
     spo2Val = false;
     hearVal = false;
     timeout1 = 0;

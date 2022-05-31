@@ -11,6 +11,6 @@ int sersor_getSPO2(void);
 
 void sensor_updateValue(void);
 
-bool sensor_processing(int &maxSPO2, int maxHB);
+bool sensor_processing(int &maxSPO2, int &maxHB);
 
 #endif

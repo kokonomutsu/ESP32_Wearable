@@ -17,7 +17,7 @@ structIO_Button strIO_Button_Value, strOld_IO_Button_Value;
 eUSER_TASK_STATE eUserTask_State = E_STATE_STARTUP_TASK;
 bool bFlag_1st_TaskState = true;
 bool startFlag = false;
-bool WorkMode = false;
+bool WorkMode = true;
 
 uint16_t intervalTimeMs;
 
@@ -53,6 +53,7 @@ void task_Application(void *parameter) {
             startFlag = false;
             MaxSPO2 = 0;
             MaxHearbeat = 0;
+
             eUserTask_State = E_STATE_PROCESSING_TASK;
             bFlag_1st_TaskState = true;
           }
@@ -100,6 +101,7 @@ void task_IO(void *parameter) {
       START_BUT_VAL = eButtonHoldOff;
       startFlag = true;
       LED_BLUE_TOG;
+      display_config2(sensor_getTemp());
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -170,7 +172,7 @@ void setup() {
   
   sensor_Setup();
   display_Setup();
-
+  BLE_Init();
   delay(1000);
   //wifi_Setup();
   //xTaskCreate(task_display,"Task 1",8192,NULL,2,NULL);

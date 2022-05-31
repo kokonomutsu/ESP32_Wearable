@@ -25,7 +25,8 @@ typedef enum {
     E_STATE_WAIT_STAM_MSB,
     E_STATE_WAIT_STAM_LSB,
     E_STATE_WAIT_DATA,
-    E_STATE_WAIT_CRC
+    E_STATE_WAIT_CRC,
+    E_STATE_WAIT_CRC1
 } APP_teDataState;
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -44,10 +45,10 @@ tsQueue asBLE_RxQueue;
 static uint8_t MsgTxSize = 0;
 static uint8_t MsgTxID;
 
-static uint8_t MsgRxBuffer[MAX_PACKET_SIZE];
-static uint8_t MsgRxSize = 0;
-static uint8_t MsgRxID;
-static uint8_t MsgCRC;
+static uint8_t  MsgRxBuffer[MAX_PACKET_SIZE];
+static uint8_t  MsgRxSize = 0;
+static uint8_t  MsgRxID;
+static uint16_t MsgCRC;
 
 class MyServerCallbacks: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
@@ -80,7 +81,7 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
-void BLE_Init(uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffer, uint32_t u32RxBufferLen)
+void BLE_Init(void)
 {
   BLEDevice::init(bleServerName);
   BLEDevice::setMTU(105);
@@ -110,10 +111,10 @@ void BLE_Init(uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffe
   BLEDevice::startAdvertising();
 
   /* Initialise Tx & Rx Queue's */
-	vQueue_Init(&asBLE_TxQueue, pu8TxBuffer, u32TxBufferLen);
-	vQueue_Init(&asBLE_RxQueue, pu8RxBuffer, u32RxBufferLen);
+	//vQueue_Init(&asBLE_TxQueue, pu8TxBuffer, u32TxBufferLen);
+	//vQueue_Init(&asBLE_RxQueue, pu8RxBuffer, u32RxBufferLen);
 }
-
+/*
 void BLE_sendMsg(void)
 {
   static APP_teDataState eTxState = E_STATE_WAIT_START;
@@ -125,32 +126,49 @@ void BLE_sendMsg(void)
     switch(eTxState)
     {
       case E_STATE_WAIT_START:
-        if(u8TxByte == SL_START_CHAR){
+        if(u8TxByte == SL_START_CHAR)
           u8Bytes = 0;
           eTxState = E_STATE_WAIT_SIZE;
-        }
         break;
       case E_STATE_WAIT_SIZE:
-        //Cấp phát động mãng: 
+        //Cấp phát động mãng:
         MsgTxSize = u8TxByte;
+        unsigned char *value = new unsigned char[(int)MsgTxSize + 2];
+        value[u8Bytes] = SL_START_CHAR;
         u8Bytes++;
-        eTxState = E_STATE_WAIT_ID;
+        eTxState = E_STATE_WAIT_DATA;
         break;
       case E_STATE_WAIT_DATA:
-        MsgTxID = u8TxByte;
         if(u8Bytes < MsgTxSize){
-          
+          value[u8Bytes++] = u8TxByte;
         }
         else{
           eTxState = E_STATE_WAIT_CRC;
         }
         break;
       case E_STATE_WAIT_CRC:
+        MsgCRC = u8TxByte*256;
+        eTxState = E_STATE_WAIT_CRC1;
+        break;
+      case E_STATE_WAIT_CRC1:
+        MsgCRC += u8TxByte;
         //Check CRC
+        if(MsgCRC)
+        {
+          value[(int)MsgTxSize + 1] = MsgCRC/256;
+          value[(int)MsgTxSize + 2] = MsgCRC%256;
+          //Send data
+          pCharacteristic->setValue(value, (int)MsgTxSize + 3);
+          pCharacteristic->notify();
+        }
+        
+        delete[] value;
+        eTxState = E_STATE_WAIT_START;
         break;
     }
   }
 }
+*/
 void BLE_sendData(unsigned char* pValue, int length)
 {
     pCharacteristic->setValue(pValue, length);
@@ -159,5 +177,17 @@ void BLE_sendData(unsigned char* pValue, int length)
 
 bool BLE_isConnected(void)
 {
-    return deviceConnected;
+  return deviceConnected;
+}
+
+static uint8_t APP_u8CalculateCRC(uint8_t *pu8Data)
+{
+  int n;
+  uint8_t u8CRC;
+
+  u8CRC = SL_START_CHAR & 0xff;
+  for (n = 1; n < 19; n++) {
+      u8CRC ^= pu8Data[n];
+  }
+  return (u8CRC);
 }
