@@ -9,7 +9,8 @@
 //#define bleServerName "FPT_IoTS_BTempHRate01-1E9E"
 #define bleServerName "FPT_IoTS_BTempHRate01-D20A"//devkit
 #define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
-#define CHARACTERISTIC_UUID "9d45a73a-b19f-4739-8339-ecad527b4455"
+#define CHARACTERISTIC_UUID_RX "9d45a73a-b19f-4739-8339-ecad527b4455"
+#define CHARACTERISTIC_UUID_TX "9d45a73b-b19f-4739-8339-ecad527b4455"
 
 #define MAX_PACKET_SIZE   100
 #define SL_START_CHAR     0x24
@@ -65,7 +66,7 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic)
   {
     std::string value = pCharacteristic->getValue();
-
+    //std::string value_FB = "feedback device";
     if (value.length() > 0)
     {
       Serial.print("New value: ");
@@ -74,6 +75,10 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
         Serial.print(value[i]);
       }
       Serial.println();
+
+      /* Loop back data */
+      //delay(100);
+      //BLE_sendData((uint8_t*)&value_FB, value_FB.length());
     }
   }
 };
@@ -92,15 +97,22 @@ void BLE_Init(void)
 
   // Create the BLE Service
   BLEService *pService = pServer->createService(SERVICE_UUID);
-  // Create a BLE Characteristic
+  // Create a BLE Characteristic RX
   pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID,
-                      BLECharacteristic::PROPERTY_READ   |
-                      BLECharacteristic::PROPERTY_WRITE  |
+                      CHARACTERISTIC_UUID_RX,
+                      BLECharacteristic::PROPERTY_WRITE
+                    );
+  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
+
+  // Create a BLE Characteristic TX
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_TX,
+                      BLECharacteristic::BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
   pCharacteristic->setCallbacks(new CharacteristicCallbacks());
+
   // Start the service
   pService->start();
 

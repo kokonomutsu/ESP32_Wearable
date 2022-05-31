@@ -5,6 +5,8 @@
 
 #include <IO_function.h>
 #include <Kernel_IO_function.h>
+#include <BLEDevice.h>
+#include "esp_bt_device.h"
 
 #include "main.h"
 
@@ -153,14 +155,40 @@ void task_Kernel_IO(void *parameter)
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
+
+String getMACinString() {
+  const uint8_t* macAddress = esp_bt_dev_get_address();
+  char charMAC[18];
+
+  sprintf(charMAC, "%02X", (int)macAddress[0]);
+  charMAC[2] = ':';
+  sprintf(charMAC+3, "%02X", (int)macAddress[1]);
+  charMAC[5] = ':';
+
+  sprintf(charMAC+6, "%02X", (int)macAddress[2]);
+  charMAC[8] = ':';
+  sprintf(charMAC+9, "%02X", (int)macAddress[3]);
+  charMAC[11] = ':';
+
+  sprintf(charMAC+12, "%02X", (int)macAddress[4]);
+  charMAC[14] = ':';
+  sprintf(charMAC+15, "%02X", (int)macAddress[5]);
+
+  return (String)charMAC;
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
+  /* BLE setup */
+  Serial.println("[DEBUG]: SYSTEM INIT!");
+  Serial.println("[DEBUG]: LED INIT!");
   LED1_Init(&pLED1);
   LED2_Init(&pLED2);
   LED3_Init(&pLED3);
 
+  Serial.println("[DEBUG]: BUTTON INIT!");
   strIO_Button_Value.bFlagNewButton =  eFALSE;
   BUTTON1_Init(&pBUT_1);
   strIO_Button_Value.bButtonState[eButton1] = eButtonRelease;
@@ -170,19 +198,29 @@ void setup() {
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   
-  sensor_Setup();
-  display_Setup();
+  //sensor_Setup();
+  //display_Setup();
   BLE_Init();
   delay(1000);
+  String myMACString = getMACinString();
+  Serial.println("My MAC address = " + myMACString);
   //wifi_Setup();
   //xTaskCreate(task_display,"Task 1",8192,NULL,2,NULL);
-  xTaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
+  //TaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
-  xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
+  //xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  sensor_updateValue();
-  
+  //sensor_updateValue();
+  delay(1000);
+  if(BLE_isConnected())
+  {
+    static uint32_t CountTick = 0;
+    static char BLETestString[32] = "Hello";
+    sprintf(BLETestString, "CountTickS: %d", CountTick++);
+    Serial.println(BLETestString);
+    BLE_sendData((uint8_t*)&BLETestString, 20);
+  }
 }
