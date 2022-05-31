@@ -7,9 +7,11 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "esp32-mqtt.h"
 
 #include <BLEDevice.h>
 #include "esp_bt_device.h"
+
 
 #define SCREEN_WIDTH 128    // OLED display width, in pixels
 #define SCREEN_HEIGHT 64    // OLED display height, in pixels
@@ -173,11 +175,13 @@ void setup() {
   display.print("Press Start BT!");
   display.display();*/
   /* BLE setup */
-  Serial.println("BLE setup!");
+  /*Serial.println("BLE setup!");
   BLE_Setup();
   delay(1000);
   String myMACString = getMACinString();
-  Serial.println("My MAC address = " + myMACString);
+  Serial.println("My MAC address = " + myMACString);*/
+  /* Cloud setup */
+  setupCloudIoT();
   //wifi_Setup();
   //xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
   //xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
