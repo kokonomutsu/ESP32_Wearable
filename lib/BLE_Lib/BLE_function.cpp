@@ -5,7 +5,8 @@
 //#include <BLEUtils.h>
 //#include <BLE2902.h>
 
-#define bleServerName "FPT_HC_IoTS_BTempHRate01-1E9E"
+//#define bleServerName "FPT_IoTS_BTempHRate01-1E9E"
+#define bleServerName "FPT_IoTS_BTempHRate01-D20A"
 #define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
 #define CHARACTERISTIC_UUID "9d45a73a-b19f-4739-8339-ecad527b4455"
 
@@ -26,11 +27,19 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
+
 void BLE_Setup(void)
 {
   BLEDevice::init(bleServerName);
+  BLEDevice::setMTU(192);
   // Create the BLE Server
   pServer = BLEDevice::createServer();
+  /* Get mac address */
+  Serial.println("BLE MAC Address");
+  BLEDevice::getAddress();
+  //Serial.println(BLEAddress::stringAddress);
+
+  
   pServer->setCallbacks(new MyServerCallbacks());
 
   // Create the BLE Service
