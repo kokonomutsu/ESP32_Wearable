@@ -159,7 +159,7 @@ void setup() {
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   
-  Serial.println("[DEBUG]: SENSOR & LCD INIT!");
+  /*Serial.println("[DEBUG]: SENSOR & LCD INIT!");
   sensor_setUp();
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
  
@@ -171,7 +171,7 @@ void setup() {
   display.setCursor(25,35);
   display.setTextSize(1);
   display.print("Press Start BT!");
-  display.display();
+  display.display();*/
   /* BLE setup */
   Serial.println("BLE setup!");
   BLE_Setup();
@@ -179,8 +179,8 @@ void setup() {
   String myMACString = getMACinString();
   Serial.println("My MAC address = " + myMACString);
   //wifi_Setup();
-  xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
-  xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
+  //xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
+  //xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_IO,"Task 3",8192,NULL,1,NULL);
 }
 
