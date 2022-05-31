@@ -7,7 +7,8 @@
 #include <Queue.h>
 
 //#define bleServerName "FPT_IoTS_BTempHRate01-1E9E"
-#define bleServerName "FPT_IoTS_BTempHRate01-D20A"//devkit
+//#define bleServerName "FPT_IoTS_BTempHRate01-D20A"//devkit
+#define bleServerName "FPT_IoTS_BTempHRate01-987A"//no component kit 1
 //#define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
 //#define CHARACTERISTIC_UUID_RX "9d45a73a-b19f-4739-8339-ecad527b4455"
 //#define CHARACTERISTIC_UUID_TX "9d45a73b-b19f-4739-8339-ecad527b4455"
@@ -114,7 +115,7 @@ void BLE_Init(void)
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
-  pCharacteristic->addDescriptor(new BLE2902());
+//  pCharacteristic->addDescriptor(new BLE2902());
 //  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
 
   // Start the service
