@@ -100,19 +100,19 @@ void BLE_Init(void)
 
   // Create the BLE Service
   BLEService *pService = pServer->createService(SERVICE_UUID);
-  
-
-  // Create a BLE Characteristic TX
-  pCharacteristic = pService->createCharacteristic(
-                      CHARACTERISTIC_UUID_TX,
-                      BLECharacteristic::PROPERTY_NOTIFY
-                    );
-  //pCharacteristic->addDescriptor(new BLE2902());
-
   // Create a BLE Characteristic RX
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID_RX,
                       BLECharacteristic::PROPERTY_WRITE
+                    );
+  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
+
+  // Create a BLE Characteristic TX
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID_TX,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
                     );
   pCharacteristic->setCallbacks(new CharacteristicCallbacks());
 
