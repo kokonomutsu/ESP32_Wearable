@@ -114,7 +114,8 @@ void BLE_Init(void)
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
-  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
+  pCharacteristic->addDescriptor(new BLE2902());
+//  pCharacteristic->setCallbacks(new CharacteristicCallbacks());
 
   // Start the service
   pService->start();
