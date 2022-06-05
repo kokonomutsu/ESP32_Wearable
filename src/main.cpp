@@ -1,39 +1,61 @@
+/****************************************************************************/
+/***        Include files                                                 ***/
+/****************************************************************************/
 #include <Arduino.h>
+#include <EEPROM.h>
+#include <ArduinoJson.h>
+
+#include <IO_function.h>
+#include <Kernel_IO_function.h>
 #include <BLE_function.h>
 #include <sensor_function.h>
 #include <display_function.h>
 
-#include <IO_function.h>
-#include <Kernel_IO_function.h>
+#include <wifi_function.h>
 
 #include "main.h"
 
+/****************************************************************************/
+/***        Local Function Prototypes                                     ***/
+/****************************************************************************/
+void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
+bool App_SendTemp_BLE(double temp);
+bool App_SendSensor_BLE(int SPO2, int HeartRate);
+void App_mptt_callback(char* topic, byte* message, unsigned int length);
+void App_Parameter_Read(StrConfigPara *StrCfg);
+void App_Parameter_Save(StrConfigPara *StrCfg);
+
+/****************************************************************************/
+/***        Exported Variables                                            ***/
+/****************************************************************************/
+extern IO_Struct pLED1, pLED1, pLED3;
+extern IO_Struct pBUT_1, pBUT_2;
+/*  IO Variable */
+structIO_Button strIO_Button_Value, strOld_IO_Button_Value;
+structIO_Manage_Output strLED_RD, strLED_GR, strLED_BL;
+
+/****************************************************************************/
+/***        Local Variables                                               ***/
+/****************************************************************************/
+char* ssid = "lau 1 nha 1248 - mr";
+char* password = "88888888";
+char* mqtt_server = "206.189.158.67";
 /**	BLE QUEUE	**/
 uint8_t auBLERxBuffer[200];
 uint8_t auBLETxBuffer[200];
-
-/*  IO Variable */
-extern IO_Struct pLED1, pLED1, pLED3;
-structIO_Manage_Output strLED_RD, strLED_GR, strLED_BL;
-extern IO_Struct pBUT_1, pBUT_2;
-structIO_Button strIO_Button_Value, strOld_IO_Button_Value;
-
+/* Sensor Varialble */
+int MaxSPO2 = 0;
+int MaxHearbeat = 0;
 /*  User Task Varialble */
 eUSER_TASK_STATE eUserTask_State = E_STATE_STARTUP_TASK;
 bool bFlag_1st_TaskState = true;
 bool startFlag = false;
 uint16_t SeqID = 0;
+StrConfigPara StrCfg1;
 
-uint16_t intervalTimeMs;
-
-/* Sensor Varialble */
-int MaxSPO2 = 0;
-int MaxHearbeat = 0;
-
-void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
-bool App_SendTemp_BLE(double temp);
-bool App_SendSensor_BLE(int SPO2, int HeartRate);
-
+/****************************************************************************/
+/***        RTOS Task                                                     ***/
+/****************************************************************************/
 void task_BLE(void *parameter)
 {
   for(;;) {
@@ -43,12 +65,16 @@ void task_BLE(void *parameter)
       //Serial.printf("MsgID: 0x%02X, MsgSize: %d \n", BLE_getMsgID(), BLE_getMsgSize());
       App_ProcessMsg_BLE(BLE_getMsgID(), BLE_getMsgSize(), BLE_getMsgData());
     }
-    /*	Update Zigbee Tx Buffer	*/
-
+    /*	Send Zigbee Tx Buffer	*/
+    if(BLE_isConnected()){
+      BLE_sendMsg();
+    }
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
-void task_Application(void *parameter) {
+
+void task_Application(void *parameter)
+{
   for(;;) {
     switch (eUserTask_State)
     {
@@ -114,18 +140,34 @@ void task_Application(void *parameter) {
         }
         break;
     }
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(StrCfg1.Parameter.interval*1000 / portTICK_PERIOD_MS);
   }
 }
 
-void task_IO(void *parameter) {
+void task_IO(void *parameter)
+{
   for(;;) {
     if(START_BUT_VAL == eButtonSingleClick)
     {
       START_BUT_VAL = eButtonHoldOff;
-      startFlag = true;
       LED_BLUE_TOG;
-      display_config2(sensor_getTemp());
+      if(eUserTask_State == E_STATE_ONESHOT_TASK){
+        startFlag = true;
+        display_config2(sensor_getTemp());
+      }
+    }
+    else if(START_BUT_VAL == eButtonDoubleClick)
+    {
+      START_BUT_VAL = eButtonHoldOff;
+      LED_RED_TOG;
+      if(!wifi_loop(StrCfg1.Parameter.DeviceID)){
+        //BLE_Advertising(false);
+        wifi_setup_mqtt(&App_mptt_callback, ssid, password, mqtt_server, 1883);
+      }
+      else{
+        wifi_disconnect();
+        //BLE_Advertising(BLEstart);
+      }
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -174,9 +216,28 @@ void task_Kernel_IO(void *parameter)
   }
 }
 
-void setup() {
+/****************************************************************************/
+/***        Application Function                                          ***/
+/****************************************************************************/
+void setup() 
+{
   // put your setup code here, to run once:
   Serial.begin(115200);
+  EEPROM.begin(512);
+
+  App_Parameter_Read(&StrCfg1);
+  if((StrCfg1.Parameter.DeviceID[0] == 0xFF) && (StrCfg1.Parameter.DeviceID[1] == 0xFF))
+  {
+    BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
+    BLE_getMAC(StrCfg1.Parameter.DeviceID);
+    App_Parameter_Save(&StrCfg1);
+    ESP.restart();
+  }
+  if(StrCfg1.Parameter.interval > 9999)
+  {
+    StrCfg1.Parameter.interval = 1;
+    App_Parameter_Save(&StrCfg1);
+  }
 
   LED1_Init(&pLED1);
   LED2_Init(&pLED2);
@@ -193,7 +254,7 @@ void setup() {
   
   sensor_Setup();
   display_Setup();
-  BLE_Init(auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
+  BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
   delay(1000);
   //wifi_Setup();
   xTaskCreate(task_BLE,"Task 1",8192,NULL,2,NULL);
@@ -205,18 +266,28 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   sensor_updateValue();
-  if(BLE_isConnected()){
-    BLE_sendMsg();
-  }
+  wifi_loop(StrCfg1.Parameter.DeviceID);
 }
 
+/****************************************************************************/
+/***        BLE Function                                                  ***/
+/****************************************************************************/
 void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
 {
   switch (MsgID)
   {
     case E_INTERVAL_CFG_ID:
-      
+    {
+      uint16_t temp = 0;
+      if(MsgLength > 8){
+        for(int i=0;i<(MsgLength - 8);i++){
+          temp = temp*10 + *(pu8Data + i) - 48;
+        }
+        StrCfg1.Parameter.interval = temp;
+        App_Parameter_Save(&StrCfg1);
+      }
       break;
+    }
     case E_WORK_MODE_ID:
       
       break;
@@ -234,6 +305,30 @@ void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       {
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_CONTINUOUS_TASK;
+      }
+      break;
+    case E_SSID_CFG_ID:
+      if((MsgLength - 8) <= SSID_MAX_SIZE)
+      {
+        for(int i=0;i<(MsgLength - 8);i++)
+          StrCfg1.Parameter.WifiSSID[i] = pu8Data[i];
+        App_Parameter_Save(&StrCfg1);
+      }
+      break;
+    case E_PASS_CFG_ID:
+      if((MsgLength - 8) <= PASS_MAX_SIZE)
+      {
+        for(int i=0;i<(MsgLength - 8);i++)
+          StrCfg1.Parameter.WifiPASS[i] = pu8Data[i];
+        App_Parameter_Save(&StrCfg1);
+      }
+      break;
+    case E_URL_CFG_ID:
+      if((MsgLength - 8) <= URL_MAX_SIZE)
+      {
+        for(int i=0;i<(MsgLength - 8);i++)
+          StrCfg1.Parameter.ServerURL[i] = pu8Data[i];
+        App_Parameter_Save(&StrCfg1);
       }
       break;
     case E_RESTART_DEVICE_ID:
@@ -265,3 +360,78 @@ bool App_SendSensor_BLE(int SPO2, int HeartRate)
   return false;
 }
 
+/****************************************************************************/
+/***        WiFi Function                                                 ***/
+/****************************************************************************/
+void App_mptt_callback(char* topic, byte* message, unsigned int length)
+{
+    String messageTemp;
+    StaticJsonDocument<200> doc;
+
+    for (int i = 0; i < length; i++) {
+        //Serial.print((char)message[i]);
+        messageTemp += (char)message[i];
+    }
+    DeserializationError error = deserializeJson(doc, messageTemp);
+    Serial.println(messageTemp);
+    
+    if(strstr(topic,"productinfo") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"restart") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"measure") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"modeselect") != NULL)
+    {
+      LED_GREEN_TOG;
+      if(doc["mode"] == '0'){
+        if(eUserTask_State != E_STATE_ONESHOT_TASK)
+        {
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_ONESHOT_TASK;
+        }
+      }
+      else if(doc["mode"] == '1'){
+        if(eUserTask_State != E_STATE_CONTINUOUS_TASK)
+        {
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_CONTINUOUS_TASK;
+        }
+      }
+    }
+    else if(strstr(topic,"interval") != NULL)
+    {
+      StrCfg1.Parameter.interval = doc["sampleinterval"];
+      App_Parameter_Save(&StrCfg1);
+    }
+    else if(strstr(topic,"wificonfig") != NULL)
+    {
+
+    }
+}
+
+/****************************************************************************/
+/***        EEPROM Parameter Function                                     ***/
+/****************************************************************************/
+void App_Parameter_Read(StrConfigPara *StrCfg)
+{
+  for(int i=0;i<sizeof(StrCfg->paraBuffer);i++){
+    StrCfg->paraBuffer[i] = EEPROM.read(i);
+    delay(5);
+  }
+}
+
+void App_Parameter_Save(StrConfigPara *StrCfg)
+{
+  for(int i=0;i<sizeof(StrCfg->paraBuffer);i++){
+    EEPROM.write(i, StrCfg->paraBuffer[i]);
+    delay(5);
+  }
+  EEPROM.commit();
+}

@@ -21,7 +21,11 @@ typedef enum {
     E_RESTART_DEVICE_ID   = 0x22,
 } Msg_teID_Type;
 
-void BLE_Init(uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffer, uint32_t u32RxBufferLen);
+void BLE_getMAC(uint8_t *DeviceID);
+
+void BLE_Init(uint8_t *DeviceID, uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffer, uint32_t u32RxBufferLen);
+
+void BLE_Advertising(bool Start);
 
 bool BLE_isConnected(void);
 

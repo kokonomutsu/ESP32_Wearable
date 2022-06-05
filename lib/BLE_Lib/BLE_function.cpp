@@ -1,18 +1,24 @@
-#include "BLE_function.h"
+/****************************************************************************/
+/***        Include files                                                 ***/
+/****************************************************************************/
 #include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
-//#include <BLEUtils.h>
-//#include <BLE2902.h>
 #include <Queue.h>
+#include "esp_bt_device.h"
 
-#define bleServerName "FPT_HC_IoTS_BTempHRate01-1E9E"
+#include "BLE_function.h"
+/****************************************************************************/
+/***        Macro Definitions                                             ***/
+/****************************************************************************/
+#define bleServerName "FPT_HC_IoT_TempHRate0-%C%C%C%C"    //Max 26 character!
 #define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
 #define TX_CHARACTERISTIC_UUID "9d45a73a-b19f-4739-8339-ecad527b4455"
 #define RX_CHARACTERISTIC_UUID "9a847af6-300b-4966-b32b-0c47a7b2c418"
 
 #define MAX_PACKET_SIZE   90
 #define SL_START_CHAR     0x24
+
 /****************************************************************************/
 /***        Type Definitions                                              ***/
 /****************************************************************************/
@@ -31,11 +37,11 @@ typedef enum {
     E_STATE_WAIT_CRC1,
 }APP_teDataState;
 
+/****************************************************************************/
+/***        Local Function Prototypes                                     ***/
+/****************************************************************************/
 static uint8_t APP_u8CalculateCRC(uint8_t Size, uint8_t Staus, uint8_t ID, uint16_t SeqID, uint16_t TimeStamp, uint8_t *pMsgData);
 static bool BLE_vRxCharParser(uint8_t u8RxChar);
-/****************************************************************************/
-/***        Exported Variables                                            ***/
-/****************************************************************************/
 
 /****************************************************************************/
 /***        Local Variables                                               ***/
@@ -88,9 +94,21 @@ class CharacteristicCallbacks: public BLECharacteristicCallbacks {
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
-void BLE_Init(uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffer, uint32_t u32RxBufferLen)
+void BLE_getMAC(uint8_t *DeviceID)
 {
-  BLEDevice::init(bleServerName);
+  const uint8_t* macAddress = esp_bt_dev_get_address();
+  char charMAC[4];
+  sprintf(charMAC, "%02X", (int)macAddress[4]);
+  sprintf(charMAC+2, "%02X", (int)macAddress[5]);
+  for(int i=0;i<4;i++)
+    DeviceID[i] = charMAC[i];
+}
+
+void BLE_Init(uint8_t *DeviceID, uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffer, uint32_t u32RxBufferLen)
+{
+  char Servername[] = bleServerName;
+  sprintf(Servername, bleServerName, DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3]);
+  BLEDevice::init(Servername);
   BLEDevice::setMTU(105);
   // Create the BLE Server
   pServer = BLEDevice::createServer();
@@ -121,10 +139,19 @@ void BLE_Init(uint8_t *pu8TxBuffer, uint32_t u32TxBufferLen, uint8_t *pu8RxBuffe
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
-
   /* Initialise Tx & Rx Queue's */
 	vQueue_Init(&asBLE_TxQueue, pu8TxBuffer, u32TxBufferLen);
 	vQueue_Init(&asBLE_RxQueue, pu8RxBuffer, u32RxBufferLen);
+}
+
+void BLE_Advertising(bool Start)
+{
+  if(Start)
+    BLEDevice::startAdvertising();
+  else{
+    BLEDevice::stopAdvertising();
+    //BLEDevice::deinit(false);
+  }
 }
 
 bool BLE_isConnected(void)
@@ -333,3 +360,7 @@ static uint8_t APP_u8CalculateCRC(uint8_t Size, uint8_t Staus, uint8_t ID, uint1
   }
   return (u8CRC);
 }
+
+/****************************************************************************/
+/***        END OF FILE                                                   ***/
+/****************************************************************************/
