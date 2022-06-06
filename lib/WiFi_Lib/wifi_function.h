@@ -7,4 +7,8 @@ bool wifi_loop(uint8_t *DeviceID);
 
 void wifi_disconnect(void);
 
+bool wifi_mqtt_isConnected(void);
+
+void wifi_mqtt_publish(uint8_t *DeviceID, String topic, char* dataBuffer);
+
 #endif

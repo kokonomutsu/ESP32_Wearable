@@ -18,10 +18,14 @@
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
-void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
-bool App_SendTemp_BLE(double temp);
-bool App_SendSensor_BLE(int SPO2, int HeartRate);
-void App_mptt_callback(char* topic, byte* message, unsigned int length);
+void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
+bool App_BLE_SendTemp(double temp);
+bool App_BLE_SendSensor(int SPO2, int HeartRate);
+
+void App_mqtt_callback(char* topic, byte* message, unsigned int length);
+void App_mqtt_SendTemp(double temp);
+void App_mqtt_SendSensor(double temp, int SPO2, int HeartRate);
+
 void App_Parameter_Read(StrConfigPara *StrCfg);
 void App_Parameter_Save(StrConfigPara *StrCfg);
 
@@ -63,7 +67,7 @@ void task_BLE(void *parameter)
     if(BLE_RxDataProcess())
     {
       //Serial.printf("MsgID: 0x%02X, MsgSize: %d \n", BLE_getMsgID(), BLE_getMsgSize());
-      App_ProcessMsg_BLE(BLE_getMsgID(), BLE_getMsgSize(), BLE_getMsgData());
+      App_BLE_ProcessMsg(BLE_getMsgID(), BLE_getMsgSize(), BLE_getMsgData());
     }
     /*	Send Zigbee Tx Buffer	*/
     if(BLE_isConnected()){
@@ -88,7 +92,7 @@ void task_Application(void *parameter)
         else{
           //Check finger in?
           display_config(sensor_getTemp());
-          App_SendTemp_BLE(sensor_getTemp());
+          App_BLE_SendTemp(sensor_getTemp());
         }
         break;
       case E_STATE_ONESHOT_TASK:
@@ -120,7 +124,8 @@ void task_Application(void *parameter)
         else{
           if(sensor_processing(MaxSPO2, MaxHearbeat))
           {
-            App_SendSensor_BLE(MaxSPO2, MaxHearbeat);
+            App_BLE_SendSensor(MaxSPO2, MaxHearbeat);
+            App_mqtt_SendSensor(sensor_getTemp(), MaxSPO2, MaxHearbeat);
             eUserTask_State = E_STATE_ONESHOT_TASK;
             bFlag_1st_TaskState = true;
           }
@@ -160,14 +165,10 @@ void task_IO(void *parameter)
     {
       START_BUT_VAL = eButtonHoldOff;
       LED_RED_TOG;
-      if(!wifi_loop(StrCfg1.Parameter.DeviceID)){
-        //BLE_Advertising(false);
-        wifi_setup_mqtt(&App_mptt_callback, ssid, password, mqtt_server, 1883);
-      }
-      else{
+      if(wifi_mqtt_isConnected())
         wifi_disconnect();
-        //BLE_Advertising(BLEstart);
-      }
+      else
+        wifi_setup_mqtt(&App_mqtt_callback, ssid, password, mqtt_server, 1883);
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -272,7 +273,7 @@ void loop() {
 /****************************************************************************/
 /***        BLE Function                                                  ***/
 /****************************************************************************/
-void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
+void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
 {
   switch (MsgID)
   {
@@ -337,7 +338,7 @@ void App_ProcessMsg_BLE(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
   }
 }
 
-bool App_SendTemp_BLE(double temp)
+bool App_BLE_SendTemp(double temp)
 {
   if(BLE_isConnected() && (temp < 1000))
   {
@@ -349,7 +350,7 @@ bool App_SendTemp_BLE(double temp)
   return false;
 }
 
-bool App_SendSensor_BLE(int SPO2, int HeartRate)
+bool App_BLE_SendSensor(int SPO2, int HeartRate)
 {
   if(BLE_isConnected() && (SPO2 < 101) && (HeartRate < 1000))
   {
@@ -363,7 +364,7 @@ bool App_SendSensor_BLE(int SPO2, int HeartRate)
 /****************************************************************************/
 /***        WiFi Function                                                 ***/
 /****************************************************************************/
-void App_mptt_callback(char* topic, byte* message, unsigned int length)
+void App_mqtt_callback(char* topic, byte* message, unsigned int length)
 {
     String messageTemp;
     StaticJsonDocument<200> doc;
@@ -414,6 +415,22 @@ void App_mptt_callback(char* topic, byte* message, unsigned int length)
     {
 
     }
+}
+
+void App_mqtt_SendTemp(double temp)
+{
+  
+}
+
+void App_mqtt_SendSensor(double temp, int SPO2, int HeartRate)
+{
+  if(wifi_mqtt_isConnected())
+  {
+    char dataSend[45];
+    int value = (int)(temp*10);
+    sprintf(dataSend, "{\"Temp\":\"%d%d.%d\",\"Heartrate\":\"%d\",\"Spo2\":\"%d\"}", value/100, (value%100)/10, value%10, HeartRate, SPO2);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", dataSend);
+  }
 }
 
 /****************************************************************************/

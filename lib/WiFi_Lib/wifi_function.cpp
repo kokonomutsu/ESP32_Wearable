@@ -57,6 +57,26 @@ bool wifi_loop(uint8_t *DeviceID)
     }
     return false;
 }
+
+bool wifi_mqtt_isConnected(void)
+{
+    if(WiFi.status() == WL_CONNECTED)
+    {
+        if (client.connected())
+            return true;
+        else
+            return false;
+    }
+    return false;
+}
+
+void wifi_mqtt_publish(uint8_t *DeviceID, String topic, char* dataBuffer)
+{
+    char pubTopic[28];
+    sprintf(pubTopic, "tele/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], topic);
+    client.publish(pubTopic, dataBuffer);
+}
+
 /****************************************************************************/
 /***              Local Function			                               **/
 /****************************************************************************/
