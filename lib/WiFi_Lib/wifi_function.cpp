@@ -5,6 +5,9 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
 #include "wifi_function.h"
 
 /****************************************************************************/
@@ -18,11 +21,13 @@ static void reconnect(uint8_t *DeviceID);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP,"pool.ntp.org", 25200, 60000);
 /****************************************************************************/
 /***        Exported Functions                                            ***/
 /****************************************************************************/
 
-bool wifi_setup_mqtt(void (*callback)(char* topic, byte* message, unsigned int length), char* ssid, char* password, char* mqtt_server, uint16_t port)
+bool wifi_connect(char* ssid, char* password)
 {
     int ConnectCnt = 0;
     Serial.print("Connecting to ");
@@ -35,9 +40,20 @@ bool wifi_setup_mqtt(void (*callback)(char* topic, byte* message, unsigned int l
         if(ConnectCnt > 30)
             return false;
     }
-    client.setServer(mqtt_server, port);
-    client.setCallback(callback);
     return true;
+}
+
+bool wifi_setup_mqtt(void (*callback)(char* topic, uint8_t* message, unsigned int length), char* ssid, char* password, char* mqtt_server, uint16_t port)
+{
+    if(wifi_connect(ssid, password))
+    {
+        client.setServer(mqtt_server, port);
+        client.setCallback(callback);
+
+        timeClient.begin();
+        return true;
+    }
+    return false;
 }
 
 void wifi_disconnect(void)
@@ -53,6 +69,8 @@ bool wifi_loop(uint8_t *DeviceID)
             reconnect(DeviceID);
         }
         client.loop();
+        timeClient.update();
+        timeClient.getFormattedDate();
         return true;
     }
     return false;
@@ -77,6 +95,23 @@ void wifi_mqtt_publish(uint8_t *DeviceID, String topic, char* dataBuffer)
     client.publish(pubTopic, dataBuffer);
 }
 
+String wifi_ntp_getTime(void)
+{
+    return (timeClient.getFormattedTime());
+}
+
+int wifi_ntp_getYears(void)
+{
+    return timeClient.getYears();
+}
+int wifi_ntp_getMonths(void)
+{
+    return timeClient.getMonths();
+}
+int wifi_ntp_getDays(void)
+{
+    return timeClient.getDate();
+}
 /****************************************************************************/
 /***              Local Function			                               **/
 /****************************************************************************/
