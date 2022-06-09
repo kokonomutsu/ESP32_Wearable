@@ -306,20 +306,18 @@ static bool BLE_vRxCharParser(uint8_t u8RxChar)
       MsgTimeStam += u8RxChar;
       if(MsgRxSize < 8)
         eRxState = E_STATE_WAIT_START;
-      else if(MsgRxSize == 8){
+      else if(MsgRxSize == 8)
         eRxState = E_STATE_WAIT_CRC;
-      } 
+      else
+        eRxState = E_STATE_WAIT_DATA;
       break;
     case E_STATE_WAIT_DATA:
-      if(u8Bytes < (MsgRxSize - 8)){
-        MsgRxDataBuffer[u8Bytes++] = u8RxChar;
-      }
-      else{
+      MsgRxDataBuffer[u8Bytes++] = u8RxChar;
+      if(u8Bytes == (MsgRxSize - 8)){
         eRxState = E_STATE_WAIT_CRC;
       }
       break;
     case E_STATE_WAIT_CRC:
-      //MsgCRC = u8RxChar*256;
       eRxState = E_STATE_WAIT_CRC1;
       break;
     case E_STATE_WAIT_CRC1:

@@ -41,9 +41,9 @@ structIO_Manage_Output strLED_RD, strLED_GR, strLED_BL;
 /****************************************************************************/
 /***        Local Variables                                               ***/
 /****************************************************************************/
-char* ssid = "lau 1 nha 1248 - mr";
-char* password = "88888888";
-char* mqtt_server = "206.189.158.67";
+//char* ssid = "lau 1 nha 1248 - mr";
+//char* password = "88888888";
+//char* mqtt_server = "206.189.158.67";
 /**	BLE QUEUE	**/
 uint8_t auBLERxBuffer[200];
 uint8_t auBLETxBuffer[200];
@@ -168,7 +168,8 @@ void task_IO(void *parameter)
       if(wifi_mqtt_isConnected())
         wifi_disconnect();
       else
-        wifi_setup_mqtt(&App_mqtt_callback, ssid, password, mqtt_server, 1883);
+        if(wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883))
+          App_Parameter_Save(&StrCfg1);
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -316,7 +317,8 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiSSID[i] = pu8Data[i];
         for(int j=i;j<SSID_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
-        //App_Parameter_Save(&StrCfg1);
+        
+        Serial.println(StrCfg1.Parameter.WifiSSID);
       }
       break;
     case E_PASS_CFG_ID:
@@ -327,7 +329,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiPASS[i] = pu8Data[i];
         for(int j=i;j<PASS_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiPASS[j] = 0x00;
-        //App_Parameter_Save(&StrCfg1);
+        Serial.println(StrCfg1.Parameter.WifiPASS);
       }
       break;
     case E_URL_CFG_ID:
@@ -338,7 +340,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.ServerURL[i] = pu8Data[i];
         for(int j=i;j<URL_MAX_SIZE;j++)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
-        //App_Parameter_Save(&StrCfg1);
+        Serial.println(StrCfg1.Parameter.ServerURL);
       }
       break;
     case E_RESTART_DEVICE_ID:
