@@ -23,8 +23,10 @@ bool App_BLE_SendTemp(double temp);
 bool App_BLE_SendSensor(int SPO2, int HeartRate);
 
 void App_mqtt_callback(char* topic, byte* message, unsigned int length);
-void App_mqtt_SendTemp(double temp);
-void App_mqtt_SendSensor(double temp, int SPO2, int HeartRate);
+bool App_mqtt_SendTemp(double temp);
+bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2);
+bool App_mqtt_SendSPO2(int HeartRate, int SPO2);
+bool App_mqtt_SendStatus(uint8_t ErrorStt, uint8_t TempStt, uint8_t Spo2Stt);
 
 void App_Parameter_Read(StrConfigPara *StrCfg);
 void App_Parameter_Save(StrConfigPara *StrCfg);
@@ -63,13 +65,13 @@ StrConfigPara StrCfg1;
 void task_BLE(void *parameter)
 {
   for(;;) {
-    /*	Check Zigbee Rx	Buffer	*/
+    /*	Check BLE Rx Buffer	*/
     if(BLE_RxDataProcess())
     {
       //Serial.printf("MsgID: 0x%02X, MsgSize: %d \n", BLE_getMsgID(), BLE_getMsgSize());
       App_BLE_ProcessMsg(BLE_getMsgID(), BLE_getMsgSize(), BLE_getMsgData());
     }
-    /*	Send Zigbee Tx Buffer	*/
+    /*	Send BLE Tx Buffer	*/
     if(BLE_isConnected()){
       BLE_sendMsg();
     }
@@ -278,37 +280,6 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
 {
   switch (MsgID)
   {
-    case E_INTERVAL_CFG_ID:
-    {
-      uint16_t temp = 0;
-      if(MsgLength > 8){
-        for(int i=0;i<(MsgLength - 8);i++){
-          temp = temp*10 + *(pu8Data + i) - 48;
-        }
-        StrCfg1.Parameter.interval = temp;
-        App_Parameter_Save(&StrCfg1);
-      }
-      break;
-    }
-    case E_WORK_MODE_ID:
-      
-      break;
-    case E_ONESHOT_MODE_ID:
-      LED_GREEN_TOG;
-      if(eUserTask_State != E_STATE_ONESHOT_TASK)
-      {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK;
-      }
-      break;
-    case E_CONTINUOUS_MODE_ID:
-      LED_GREEN_TOG;
-      if(eUserTask_State != E_STATE_CONTINUOUS_TASK)
-      {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_CONTINUOUS_TASK;
-      }
-      break;
     case E_SSID_CFG_ID:
       if((MsgLength - 8) <= SSID_MAX_SIZE)
       {
@@ -332,6 +303,21 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         Serial.println(StrCfg1.Parameter.WifiPASS);
       }
       break;
+    case E_INTERVAL_CFG_ID:
+    {
+      uint16_t temp = 0;
+      if(MsgLength > 8){
+        for(int i=0;i<(MsgLength - 8);i++){
+          temp = temp*10 + *(pu8Data + i) - 48;
+        }
+        StrCfg1.Parameter.interval = temp;
+        App_Parameter_Save(&StrCfg1);
+      }
+      break;
+    }
+    case E_WORK_MODE_ID:
+      
+      break;
     case E_URL_CFG_ID:
       if((MsgLength - 8) <= URL_MAX_SIZE)
       {
@@ -342,6 +328,31 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
         Serial.println(StrCfg1.Parameter.ServerURL);
       }
+      break;
+    case E_DEVICE_DATA_ID:
+      BLE_configMsg(12, 0, E_DEVICE_DATA_ID, SeqID++, 2, StrCfg1.Parameter.DeviceID);
+      break;
+    case E_PRIVATE_KEY_ID:
+      
+      break;
+    case E_ONESHOT_MODE_ID:
+      LED_GREEN_TOG;
+      if(eUserTask_State != E_STATE_ONESHOT_TASK)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_ONESHOT_TASK;
+      }
+      break;
+    case E_CONTINUOUS_MODE_ID:
+      LED_GREEN_TOG;
+      if(eUserTask_State != E_STATE_CONTINUOUS_TASK)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_CONTINUOUS_TASK;
+      }
+      break;
+    case E_PRODUCT_INFO_ID:
+      
       break;
     case E_RESTART_DEVICE_ID:
       
@@ -371,7 +382,6 @@ bool App_BLE_SendSensor(int SPO2, int HeartRate)
   }
   return false;
 }
-
 /****************************************************************************/
 /***        WiFi Function                                                 ***/
 /****************************************************************************/
@@ -444,17 +454,11 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
 
       wifi_disconnect();
       if(wifi_connect(StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS))
-        Serial.println("OK");
-        //App_Parameter_Save(&StrCfg1);
+        App_Parameter_Save(&StrCfg1);
     }
 }
 
-void App_mqtt_SendTemp(double temp)
-{
-  
-}
-
-void App_mqtt_SendSensor(double temp, int SPO2, int HeartRate)
+bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
 {
   if(wifi_mqtt_isConnected())
   {
@@ -472,7 +476,69 @@ void App_mqtt_SendSensor(double temp, int SPO2, int HeartRate)
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
     wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", dataSend);
+    return true;
   }
+  return false;
+}
+
+bool App_mqtt_SendTemp(double temp)
+{
+  if(wifi_mqtt_isConnected())
+  {
+    char dataSend[45];
+    int value = (int)(temp*10);
+    sprintf(dataSend,
+            "{\"Temp\":\"%d%d.%d\",\"Time\":\"%d-%d-%dT%s\"}",
+            value/100,
+            (value%100)/10,
+            value%10,
+            wifi_ntp_getYears(),
+            wifi_ntp_getMonths(),
+            wifi_ntp_getDays(),
+            wifi_ntp_getTime());
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", dataSend);
+    return true;
+  }
+  return false;
+}
+
+bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
+{
+  if(wifi_mqtt_isConnected())
+  {
+    char dataSend[60];
+    sprintf(dataSend,
+            "{\"Heartrate\":\"%d\",\"Spo2\":\"%d\",\"Time\":\"%d-%d-%dT%s\"}",
+            HeartRate,
+            SPO2,
+            wifi_ntp_getYears(),
+            wifi_ntp_getMonths(),
+            wifi_ntp_getDays(),
+            wifi_ntp_getTime());
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "spo2", dataSend);
+    return true;
+  }
+  return false;
+}
+
+bool App_mqtt_SendStatus(uint8_t ErrorStt, uint8_t TempStt, uint8_t Spo2Stt)
+{
+  if(wifi_mqtt_isConnected())
+  {
+    char dataSend[82];
+    sprintf(dataSend,
+            "{\"Error\":\"%d\",\"TempSenStatus\":\"%d\",\"Spo2SenStatus\":\"%d\",\"Time\":\"%d-%d-%dT%s\"}",
+            ErrorStt,
+            TempStt,
+            Spo2Stt,
+            wifi_ntp_getYears(),
+            wifi_ntp_getMonths(),
+            wifi_ntp_getDays(),
+            wifi_ntp_getTime());
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "status", dataSend);
+    return true;
+  }
+  return false;
 }
 
 /****************************************************************************/
