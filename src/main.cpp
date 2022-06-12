@@ -95,7 +95,8 @@ void task_Application(void *parameter)
         else{
           //Check finger in?
           display_config(sensor_getTemp());
-          App_BLE_SendTemp(sensor_getTemp());
+          /* STARTUP-IDLE just measure, not send BLE data */
+          //App_BLE_SendTemp(sensor_getTemp());
         }
         break;
       case E_STATE_ONESHOT_TASK:
@@ -119,27 +120,18 @@ void task_Application(void *parameter)
         }
         break;
       case E_STATE_ONESHOT_TASK_TEMP:
+        static double bSingleTempShot = 0;
         if(bFlag_1st_TaskState)
         {
-          //display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
-          //bFlag_1st_TaskState = false;
           Serial.println("[DEBUG]: ONESHOT TASK TEMPERATURE!");
-          App_BLE_SendTemp(32);
-          bFlag_1st_TaskState = true;
-          eUserTask_State = E_STATE_STARTUP_TASK;
+          bSingleTempShot = sensor_getTemp();
+          display_single_temp_shot(bSingleTempShot);
+          bFlag_1st_TaskState = false;
         }
         else{
-          /*if(startFlag){
-            startFlag = false;
-            MaxSPO2 = 0;
-            MaxHearbeat = 0;
-
-            eUserTask_State = E_STATE_PROCESSING_TASK;
-            bFlag_1st_TaskState = true;
-          }
-          else{
-            display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
-          }*/
+          App_BLE_SendTemp(bSingleTempShot);
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_STARTUP_TASK;
         }
         break;
         case E_STATE_ONESHOT_TASK_SPO2:

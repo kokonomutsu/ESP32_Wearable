@@ -9,4 +9,6 @@ void display_config1(double temp, int Bpm, int SPO2);
 
 void display_config2(double temp);
 
+void display_single_temp_shot(double temp);
+
 #endif

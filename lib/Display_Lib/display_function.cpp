@@ -90,3 +90,21 @@ void display_config2(double temp)
 
   display.display();
 }
+
+void display_single_temp_shot(double temp)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+
+  display.setCursor(30,15);  
+  display.setTextSize(1);
+  display.print("SINGLE TEMP SHOT");
+
+  display.setCursor(25,35);  
+  display.setTextSize(2);
+  display.print(temp);
+  display.print((char)247);
+  display.print("C");
+  
+  display.display(); 
+}
