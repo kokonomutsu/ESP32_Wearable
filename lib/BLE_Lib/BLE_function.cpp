@@ -11,7 +11,7 @@
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
-#define bleServerName "FPT_HC_IoT_TempHRate0-%C%C%C%C"    //Max 26 character!
+#define bleServerName "FPT_IoTS_BTempHRate01-%C%C%C%C"    //Max 26 character!
 #define SERVICE_UUID "7bde7b9d-547e-4703-9785-ceedeeb2863e"
 #define TX_CHARACTERISTIC_UUID "9d45a73a-b19f-4739-8339-ecad527b4455"
 #define RX_CHARACTERISTIC_UUID "9a847af6-300b-4966-b32b-0c47a7b2c418"
@@ -318,12 +318,23 @@ static bool BLE_vRxCharParser(uint8_t u8RxChar)
       }
       break;
     case E_STATE_WAIT_CRC:
+      //MsgCRC = u8RxChar*256;
       eRxState = E_STATE_WAIT_CRC1;
       break;
     case E_STATE_WAIT_CRC1:
       eRxState = E_STATE_WAIT_START;
-      if(u8RxChar == APP_u8CalculateCRC(MsgRxSize, MsgRxStatus, MsgRxID, MsgSeqID, MsgTimeStam, MsgRxDataBuffer))
+      static uint8_t bTestCRC;
+      bTestCRC = APP_u8CalculateCRC(MsgRxSize, MsgRxStatus, MsgRxID, MsgSeqID, MsgTimeStam, MsgRxDataBuffer);
+      Serial.print("[DEBUG]: PAYLOAD CRC:");
+      Serial.print(u8RxChar, HEX);
+      Serial.println();
+      Serial.print("[DEBUG]: CALCULATE CRC:");
+      Serial.print(bTestCRC, HEX);
+      Serial.println();
+      if(u8RxChar == bTestCRC)
+      {
         return true;
+      }
       else{
         Serial.println("BAD CRC!");
       }

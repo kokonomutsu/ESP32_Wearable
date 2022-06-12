@@ -372,6 +372,22 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
     case E_WORK_MODE_ID:
       
       break;
+    case E_ONESHOT_TEMP_ID:
+      LED_GREEN_TOG;
+      if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+      }
+      break;
+    case E_ONESHOT_SPO2_ID:
+      LED_BLUE_TOG;
+      if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+      }
+      break;
     case E_URL_CFG_ID:
       if((MsgLength - 8) <= URL_MAX_SIZE)
       {
