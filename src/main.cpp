@@ -3,17 +3,16 @@
 /****************************************************************************/
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <ArduinoJson.h>
-
 #include <IO_function.h>
 #include <Kernel_IO_function.h>
 #include <BLE_function.h>
 #include <sensor_function.h>
 #include <display_function.h>
-
 #include <wifi_function.h>
-
 #include "main.h"
+#include <ArduinoJson.h>
+#include "CloudFPTIoTCoreMqtt.h"
+#include "ciotc_config.h"
 
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
@@ -58,6 +57,52 @@ bool bFlag_1st_TaskState = true;
 bool startFlag = false;
 uint16_t SeqID = 0;
 StrConfigPara StrCfg1;
+
+/* Json */
+DynamicJsonDocument MQTT_JsonDoc(1024);
+// Initialize WiFi and MQTT for this board
+Client *netClient;
+CloudIoTCoreDevice *device;
+unsigned long iat = 0;
+String jwt;
+// Forward global callback declarations
+String getJwt();
+
+/* Struct mqtt package */
+#define typeOwnerbe "be";
+#define typeOwneriot "iot";
+#define typeOwnermb "mb";
+
+#define typePakcketmbSendPublicKey '1';
+#define typePakcketbeStatusPublicKey '2';
+#define typePakcketiotSendJwt '3';
+#define typePakcketbeStatusVerify '4';
+
+typedef struct{
+  String deviceId = "Device Id";
+  String jwt = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NTQwNzc2NjksImV4cCI6MTY1NDA3ODg2OSwiYXVkIjoiZnB0LWRlbW8tdGVzdGluZy1qd3QifQ.m9zLfMLgNwutRKb6X8nG2Ih2uB-TJZ-DNRjfuNvFNhRdPxlznnfrkvKj_28Go07JhFmtSvtrhKRsVM1fhkAE4w";
+}structMQTTData;
+
+/* Struct mqtt package */
+typedef struct{
+	  String owner = typeOwneriot; //value : iot
+    String topic = "tele/FPT_FCCIoT_xxxx/topic";
+    char type = typePakcketiotSendJwt; //value : 3
+    uint index = 0; //default
+    uint total = 1; //default
+    structMQTTData strMQTTdata;
+}structMQTTSendPackage;
+
+/* Global variable */
+structMQTTSendPackage strMQTTSendPackage;
+
+/* Get JWT function */
+String getJwt(){
+  iat = time(nullptr);
+  Serial.println("Refreshing JWT");
+  jwt = device->createJWT(iat, jwt_exp_secs);
+  return jwt;
+}
 
 /****************************************************************************/
 /***        RTOS Task                                                     ***/
@@ -326,9 +371,17 @@ void setup()
 }
 
 void loop() {
+  static bool bFlagGetJWT = false;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
   wifi_loop(StrCfg1.Parameter.DeviceID);
+
+  if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
+  {
+    bFlagGetJWT = false;
+    /* Try get JWT */
+    Serial.println(getJwt().c_str());
+  }
 }
 
 /****************************************************************************/

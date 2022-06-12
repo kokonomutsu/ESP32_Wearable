@@ -6,8 +6,9 @@
 #include <BLEServer.h>
 #include <Queue.h>
 #include "esp_bt_device.h"
-
 #include "BLE_function.h"
+#include <ArduinoJson.h>
+
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
