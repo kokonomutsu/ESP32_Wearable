@@ -91,12 +91,35 @@ void display_config2(double temp)
   display.display();
 }
 
+void display_config3(int Bpm, int SPO2)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(10,15);  
+  display.print("MESURING......");
+
+  display.setTextSize(1);
+  display.setCursor(20,30);  
+  display.print("%SpO2");
+  display.setCursor(80,30);  
+  display.print("PRbpm");
+
+  display.setTextSize(2);
+  display.setCursor(23,45);  
+  display.print(SPO2);
+  display.setCursor(80,45);  
+  display.print(Bpm);
+  
+  display.display(); 
+}
+
 void display_single_temp_shot(double temp)
 {
   display.clearDisplay();
   display.setTextColor(WHITE);
 
-  display.setCursor(30,15);  
+  display.setCursor(10,15);  
   display.setTextSize(1);
   display.print("SINGLE TEMP SHOT");
 
@@ -105,6 +128,29 @@ void display_single_temp_shot(double temp)
   display.print(temp);
   display.print((char)247);
   display.print("C");
+  
+  display.display(); 
+}
+
+void display_single_spo2_shot(int Bpm, int SPO2)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(10,15);  
+  display.print("SINGLE SPO2 SHOT");
+
+  display.setTextSize(1);
+  display.setCursor(20,30);  
+  display.print("%SpO2");
+  display.setCursor(80,30);  
+  display.print("PRbpm");
+
+  display.setTextSize(2);
+  display.setCursor(23,45);  
+  display.print(SPO2);
+  display.setCursor(80,45);  
+  display.print(Bpm);
   
   display.display(); 
 }

@@ -102,6 +102,7 @@ void task_Application(void *parameter)
       case E_STATE_ONESHOT_TASK:
         if(bFlag_1st_TaskState)
         {
+          Serial.println("[DEBUG]: ONESHOT TASK!");
           display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
           bFlag_1st_TaskState = false;
         }
@@ -124,38 +125,49 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: ONESHOT TASK TEMPERATURE!");
-          bSingleTempShot = sensor_getTemp();
+          bSingleTempShot = 0;
           display_single_temp_shot(bSingleTempShot);
           bFlag_1st_TaskState = false;
         }
         else{
+          /* Delay 1s to display 0 */
+          vTaskDelay(500);
+          bSingleTempShot = sensor_getTemp();
           App_BLE_SendTemp(bSingleTempShot);
+          /* Delay 1s to display */
+          vTaskDelay(1000);
+          display_single_temp_shot(bSingleTempShot);
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_STARTUP_TASK;
         }
         break;
         case E_STATE_ONESHOT_TASK_SPO2:
+        static int Bpm = 0, SPO2 = 0;
         if(bFlag_1st_TaskState)
         {
-          //display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
-          //bFlag_1st_TaskState = false;
           Serial.println("[DEBUG]: ONESHOT TASK SP02!");
-          App_BLE_SendSensor(97,75);
-          bFlag_1st_TaskState = true;
-          eUserTask_State = E_STATE_STARTUP_TASK;
+          display_single_spo2_shot(0,0);
+          bFlag_1st_TaskState = false;
+          startFlag = true;
         }
         else{
-          /*if(startFlag){
-            startFlag = false;
-            MaxSPO2 = 0;
-            MaxHearbeat = 0;
-
-            eUserTask_State = E_STATE_PROCESSING_TASK;
+          if(sensor_processing(MaxSPO2, MaxHearbeat))
+          {
+            Bpm = MaxHearbeat;
+            SPO2 = MaxSPO2;
+            App_BLE_SendSensor(SPO2,Bpm);
+            display_single_spo2_shot(Bpm,SPO2);
+            /* Delay 5s to display */
+            vTaskDelay(5000);
+            eUserTask_State = E_STATE_STARTUP_TASK;
             bFlag_1st_TaskState = true;
           }
-          else{
-            display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
-          }*/
+          else
+          {
+            Bpm = sensor_getHeardBeat();
+            SPO2 = sersor_getSPO2();
+            display_config3(Bpm,SPO2);
+          }
         }
         break;
       case E_STATE_PROCESSING_TASK:
