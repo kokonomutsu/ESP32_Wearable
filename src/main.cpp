@@ -57,6 +57,9 @@ bool bFlag_1st_TaskState = true;
 bool startFlag = false;
 uint16_t SeqID = 0;
 StrConfigPara StrCfg1;
+char fullDeviceID[20];
+char strTime[30];
+char fullTopic[50];
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -343,6 +346,20 @@ void setup()
   memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
   memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
   memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
+                                                StrCfg1.Parameter.DeviceID[1],
+                                                StrCfg1.Parameter.DeviceID[2],
+                                                StrCfg1.Parameter.DeviceID[3]);
+
+  /* Serial json */
+  /*MQTT_JsonDoc["owner"]   = typeOwneriot;
+  MQTT_JsonDoc["topic"]   = strMQTTSendPackage.topic;
+  MQTT_JsonDoc["type"]    = strMQTTSendPackage.type;
+  MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+  MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+  MQTT_JsonDoc["data"]["deviceId"] = strMQTTSendPackage.strMQTTdata.deviceId;
+  MQTT_JsonDoc["data"]["jwt"] = strMQTTSendPackage.strMQTTdata.jwt;
+  serializeJson(MQTT_JsonDoc, Serial);*/
 
   if(StrCfg1.Parameter.interval > 9999)
   {
@@ -619,7 +636,8 @@ bool App_mqtt_SendTemp(double temp)
 {
   if(wifi_mqtt_isConnected())
   {
-    char dataSend[45];
+    char msg[2000];
+    /*char dataSend[45];
     int value = (int)(temp*10);
     sprintf(dataSend,
             "{\"Temp\":\"%d%d.%d\",\"Time\":\"%d-%d-%dT%s\"}",
@@ -630,7 +648,29 @@ bool App_mqtt_SendTemp(double temp)
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", dataSend);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", dataSend);*/
+
+    /* Json send message */
+    sprintf(strTime,
+            "%d-%d-%dT%s",wifi_ntp_getYears(),
+            wifi_ntp_getMonths(),
+            wifi_ntp_getDays(),
+            wifi_ntp_getTime());
+    Serial.println(strTime);
+    sprintf(fullTopic, "tele/%s/temp", fullDeviceID);
+    Serial.println(fullTopic);
+    /* Add to json */
+    MQTT_JsonDoc["owner"]   = typeOwneriot;
+    MQTT_JsonDoc["topic"]   = fullTopic;
+    MQTT_JsonDoc["type"]    = strMQTTSendPackage.type;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["temp"] = temp;
+    MQTT_JsonDoc["data"]["time"] = strTime;
+    serializeJson(MQTT_JsonDoc, msg);
+    Serial.println(msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", msg);
     return true;
   }
   return false;
