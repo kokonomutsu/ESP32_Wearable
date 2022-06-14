@@ -73,15 +73,15 @@ String jwt;
 String getJwt();
 
 /* Struct mqtt package */
-#define typeOwnerbe "be";
-#define typeOwneriot "iot";
-#define typeOwnermb "mb";
+#define typeOwnerbe   "be"
+#define typeOwneriot  "iot"
+#define typeOwnermb   "mb"
 
-#define iotSendSensors  '1';
-#define iotSendTemp     '2';
-#define iotSendSpo2     '3';
-#define iotSendStatus   '4';
-#define iotSendReqCon   '12';
+#define iotSendSensors  1
+#define iotSendTemp     2
+#define iotSendSpo2     3
+#define iotSendStatus   4
+#define iotSendReqCon   12
 
 
 typedef struct{
