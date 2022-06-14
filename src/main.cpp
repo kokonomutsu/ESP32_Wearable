@@ -60,6 +60,7 @@ StrConfigPara StrCfg1;
 char fullDeviceID[20];
 char strTime[30];
 char fullTopic[50];
+char msg[2000];
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -76,10 +77,12 @@ String getJwt();
 #define typeOwneriot "iot";
 #define typeOwnermb "mb";
 
-#define typePakcketmbSendPublicKey '1';
-#define typePakcketbeStatusPublicKey '2';
-#define typePakcketiotSendJwt '3';
-#define typePakcketbeStatusVerify '4';
+#define iotSendSensors  '1';
+#define iotSendTemp     '2';
+#define iotSendSpo2     '3';
+#define iotSendStatus   '4';
+#define iotSendReqCon   '12';
+
 
 typedef struct{
   String deviceId = "Device Id";
@@ -90,7 +93,7 @@ typedef struct{
 typedef struct{
 	  String owner = typeOwneriot; //value : iot
     String topic = "tele/FPT_FCCIoT_xxxx/topic";
-    char type = typePakcketiotSendJwt; //value : 3
+    char type = iotSendTemp; //value : 3
     uint index = 0; //default
     uint total = 1; //default
     structMQTTData strMQTTdata;
@@ -613,20 +616,30 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
 {
   if(wifi_mqtt_isConnected())
   {
-    char dataSend[76];
-    int value = (int)(temp*10);
-    sprintf(dataSend,
-            "{\"Temp\":\"%d%d.%d\",\"Heartrate\":\"%d\",\"Spo2\":\"%d\",\"Time\":\"%d-%d-%dT%s\"}",
-            value/100,
-            (value%100)/10,
-            value%10,
-            HeartRate,
-            SPO2,
-            wifi_ntp_getYears(),
+    /* Json send message */
+    sprintf(strTime,
+            "%d-%d-%dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", dataSend);
+    Serial.println(strTime);
+    sprintf(fullTopic, "tele/%s/sensor", fullDeviceID);
+    Serial.println(fullTopic);
+    /* Add to json */
+    MQTT_JsonDoc.clear();
+    MQTT_JsonDoc["owner"]   = typeOwneriot;
+    MQTT_JsonDoc["topic"]   = fullTopic;
+    MQTT_JsonDoc["type"]    = iotSendSensors;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
+    MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["temp"] = temp;
+    MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
+    MQTT_JsonDoc["data"]["spo2"] = SPO2;
+    MQTT_JsonDoc["data"]["time"] = strTime;
+    serializeJson(MQTT_JsonDoc, msg);
+    Serial.println(msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", msg);
     return true;
   }
   return false;
@@ -636,20 +649,6 @@ bool App_mqtt_SendTemp(double temp)
 {
   if(wifi_mqtt_isConnected())
   {
-    char msg[2000];
-    /*char dataSend[45];
-    int value = (int)(temp*10);
-    sprintf(dataSend,
-            "{\"Temp\":\"%d%d.%d\",\"Time\":\"%d-%d-%dT%s\"}",
-            value/100,
-            (value%100)/10,
-            value%10,
-            wifi_ntp_getYears(),
-            wifi_ntp_getMonths(),
-            wifi_ntp_getDays(),
-            wifi_ntp_getTime());
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", dataSend);*/
-
     /* Json send message */
     sprintf(strTime,
             "%d-%d-%dT%s",wifi_ntp_getYears(),
@@ -660,11 +659,12 @@ bool App_mqtt_SendTemp(double temp)
     sprintf(fullTopic, "tele/%s/temp", fullDeviceID);
     Serial.println(fullTopic);
     /* Add to json */
+    MQTT_JsonDoc.clear();
     MQTT_JsonDoc["owner"]   = typeOwneriot;
     MQTT_JsonDoc["topic"]   = fullTopic;
-    MQTT_JsonDoc["type"]    = strMQTTSendPackage.type;
-    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
-    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["type"]    = iotSendTemp;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["time"] = strTime;
@@ -680,16 +680,29 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
 {
   if(wifi_mqtt_isConnected())
   {
-    char dataSend[60];
-    sprintf(dataSend,
-            "{\"Heartrate\":\"%d\",\"Spo2\":\"%d\",\"Time\":\"%d-%d-%dT%s\"}",
-            HeartRate,
-            SPO2,
-            wifi_ntp_getYears(),
+    /* Json send message */
+    sprintf(strTime,
+            "%d-%d-%dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "spo2", dataSend);
+    Serial.println(strTime);
+    sprintf(fullTopic, "tele/%s/spo2", fullDeviceID);
+    Serial.println(fullTopic);
+    /* Add to json */
+    MQTT_JsonDoc.clear();
+    MQTT_JsonDoc["owner"]   = typeOwneriot;
+    MQTT_JsonDoc["topic"]   = fullTopic;
+    MQTT_JsonDoc["type"]    = iotSendSpo2;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
+    MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
+    MQTT_JsonDoc["data"]["spo2"] = SPO2;
+    MQTT_JsonDoc["data"]["time"] = strTime;
+    serializeJson(MQTT_JsonDoc, msg);
+    Serial.println(msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "spo2", msg);
     return true;
   }
   return false;
