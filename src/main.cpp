@@ -42,9 +42,9 @@ structIO_Manage_Output strLED_RD, strLED_GR, strLED_BL;
 /****************************************************************************/
 /***        Local Variables                                               ***/
 /****************************************************************************/
-//char* ssid = "lau 1 nha 1248 - mr";
-//char* password = "88888888";
-//char* mqtt_server = "206.189.158.67";
+//char* ssid = "KOKONO";
+//char* password = "kokono26988";
+//char* mqtt_server = "103.170.123.115";
 /**	BLE QUEUE	**/
 uint8_t auBLERxBuffer[200];
 uint8_t auBLETxBuffer[200];
@@ -179,6 +179,7 @@ void task_Application(void *parameter)
           vTaskDelay(500);
           bSingleTempShot = sensor_getTemp();
           App_BLE_SendTemp(bSingleTempShot);
+          App_mqtt_SendTemp(bSingleTempShot);
           /* Delay 1s to display */
           vTaskDelay(1000);
           display_single_temp_shot(bSingleTempShot);
@@ -202,6 +203,7 @@ void task_Application(void *parameter)
             SPO2 = MaxSPO2;
             App_BLE_SendSensor(SPO2,Bpm);
             display_single_spo2_shot(Bpm,SPO2);
+            App_mqtt_SendSPO2(Bpm,SPO2);
             /* Delay 5s to display */
             vTaskDelay(5000);
             eUserTask_State = E_STATE_STARTUP_TASK;
@@ -337,6 +339,11 @@ void setup()
     App_Parameter_Save(&StrCfg1);
     ESP.restart();
   }
+  /* Test default wifi */
+  memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
+  memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
+  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+
   if(StrCfg1.Parameter.interval > 9999)
   {
     StrCfg1.Parameter.interval = 1;
@@ -363,7 +370,7 @@ void setup()
   Serial.println("[DEBUG]: BLE INIT!");
   BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
   delay(1000);
-  //wifi_Setup();
+  wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
   xTaskCreate(task_BLE,"Task 1",8192,NULL,2,NULL);
   xTaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
