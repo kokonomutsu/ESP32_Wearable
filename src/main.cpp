@@ -104,6 +104,7 @@ typedef struct{
     char type = iotSendTemp; //value : 3
     uint index = 0; //default
     uint total = 1; //default
+    uint messageID = 1;//default
     structMQTTData strMQTTdata;
 }structMQTTSendPackage;
 
@@ -369,6 +370,7 @@ void setup()
   MQTT_JsonDoc["type"]    = strMQTTSendPackage.type;
   MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
   MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+  MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID;
   MQTT_JsonDoc["data"]["deviceId"] = strMQTTSendPackage.strMQTTdata.deviceId;
   MQTT_JsonDoc["data"]["jwt"] = strMQTTSendPackage.strMQTTdata.jwt;
   serializeJson(MQTT_JsonDoc, Serial);*/
@@ -560,7 +562,7 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
     DeserializationError error = deserializeJson(doc, messageTemp);
     Serial.println(messageTemp);
     
-    if(strstr(topic,"productinfo") != NULL)
+    if(strstr(topic,"deviceConfig") != NULL)
     {
 
     }
@@ -568,7 +570,19 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
     {
 
     }
-    else if(strstr(topic,"measure") != NULL)
+    else if(strstr(topic,"measureTemp") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"measureHrSpo2") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"measureStop") != NULL)
+    {
+
+    }
+    else if(strstr(topic,"productInfo") != NULL)
     {
 
     }
@@ -639,8 +653,9 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["owner"]   = typeOwneriot;
     MQTT_JsonDoc["topic"]   = fullTopic;
     MQTT_JsonDoc["type"]    = iotSendSensors;
-    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
-    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
@@ -672,8 +687,9 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["owner"]   = typeOwneriot;
     MQTT_JsonDoc["topic"]   = fullTopic;
     MQTT_JsonDoc["type"]    = iotSendTemp;
-    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
-    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["time"] = strTime;
@@ -703,8 +719,9 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["owner"]   = typeOwneriot;
     MQTT_JsonDoc["topic"]   = fullTopic;
     MQTT_JsonDoc["type"]    = iotSendSpo2;
-    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index++;
-    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total++;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
