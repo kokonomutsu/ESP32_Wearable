@@ -77,11 +77,19 @@ String getJwt();
 #define typeOwneriot  "iot"
 #define typeOwnermb   "mb"
 
-#define iotSendSensors  1
-#define iotSendTemp     2
-#define iotSendSpo2     3
-#define iotSendStatus   4
-#define iotSendReqCon   12
+#define iotReqCon                   1
+#define serverSendDeviceConfig      2
+#define iotSendSensors              3
+#define iotSendTemp                 4
+#define iotSendSpo2                 5
+#define iotSendStatus               6
+#define iotSendProductInfo          11
+
+#define serverSendMeasureTemp       7
+#define serverSendMeasureSpo2       8
+#define serverSendMeasureStop       9
+#define serverAskProductInfo        10
+#define serverSendMeasureRestart    12
 
 
 typedef struct{
@@ -348,7 +356,8 @@ void setup()
   /* Test default wifi */
   memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
   memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
