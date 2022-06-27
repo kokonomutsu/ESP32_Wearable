@@ -555,85 +555,34 @@ bool App_BLE_SendSensor(int SPO2, int HeartRate)
 void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
 {
     String messageTemp;
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<1024> MQTT_JsonReceiveDoc;
 
     for (int i = 0; i < length; i++) {
         //Serial.print((char)message[i]);
         messageTemp += (char)message[i];
     }
-    DeserializationError error = deserializeJson(doc, messageTemp);
+    DeserializationError error = deserializeJson(MQTT_JsonReceiveDoc, messageTemp);
     Serial.println(messageTemp);
     
-    if(strstr(topic,"deviceConfig") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"restart") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"measureTemp") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"measureHrSpo2") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"measureStop") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"productInfo") != NULL)
-    {
-
-    }
-    else if(strstr(topic,"modeselect") != NULL)
+    /* Only search topic IoT, parse follow type */
+    if(strstr(topic,"iot") != NULL)
     {
       LED_GREEN_TOG;
-      if(doc["mode"] == '0'){
-        if(eUserTask_State != E_STATE_ONESHOT_TASK)
+      LED_BLUE_TOG;
+      if(MQTT_JsonReceiveDoc["type"] == 7){
+        if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
         {
           bFlag_1st_TaskState = true;
-          eUserTask_State = E_STATE_ONESHOT_TASK;
+          eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
         }
       }
-      else if(doc["mode"] == '1'){
-        if(eUserTask_State != E_STATE_CONTINUOUS_TASK)
+      else if(MQTT_JsonReceiveDoc["type"] == 8){
+        if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
         {
           bFlag_1st_TaskState = true;
-          eUserTask_State = E_STATE_CONTINUOUS_TASK;
+          eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
         }
       }
-    }
-    /*else if(strstr(topic,"interval") != NULL)
-    {
-      StrCfg1.Parameter.interval = doc["sampleinterval"];
-      App_Parameter_Save(&StrCfg1);
-    }*/
-    else if(strstr(topic,"wificonfig") != NULL)
-    {
-      int i=0;
-      char *ssid = strstr((char *)message, "ssid");
-      while(*(ssid + 7 + i) != '"'){
-        StrCfg1.Parameter.WifiSSID[i] = *(ssid + 7 + i);
-        i++;
-      }
-      for(int j=i;j<SSID_MAX_SIZE;j++)
-        StrCfg1.Parameter.WifiSSID[j] = 0x00;
-
-      i=0;
-      char *pass = strstr((char *)message, "password");
-      while(*(pass + 11 + i) != '"'){
-        StrCfg1.Parameter.WifiPASS[i] = *(pass + 11 + i);
-        i++;
-      }
-      for(int j=i;j<PASS_MAX_SIZE;j++)
-        StrCfg1.Parameter.WifiPASS[j] = 0x00;
-
-      wifi_disconnect();
-      if(wifi_connect(StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS))
-        App_Parameter_Save(&StrCfg1);
     }
 }
 
@@ -648,7 +597,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
     Serial.println(strTime);
-    sprintf(fullTopic, "tele/%s/sensor", fullDeviceID);
+    sprintf(fullTopic, "tele/%s/iot", fullDeviceID);
     Serial.println(fullTopic);
     /* Add to json */
     MQTT_JsonDoc.clear();
@@ -685,7 +634,7 @@ bool App_mqtt_SendTemp(double temp)
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
     Serial.println(strTime);
-    sprintf(fullTopic, "tele/%s/temp", fullDeviceID);
+    sprintf(fullTopic, "tele/%s/iot", fullDeviceID);
     Serial.println(fullTopic);
     /* Add to json */
     MQTT_JsonDoc.clear();
@@ -720,7 +669,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
     Serial.println(strTime);
-    sprintf(fullTopic, "tele/%s/spo2", fullDeviceID);
+    sprintf(fullTopic, "tele/%s/iot", fullDeviceID);
     Serial.println(fullTopic);
     /* Add to json */
     MQTT_JsonDoc.clear();
