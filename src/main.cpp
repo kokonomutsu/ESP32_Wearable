@@ -104,7 +104,7 @@ typedef struct{
     char type = iotSendTemp; //value : 3
     uint index = 0; //default
     uint total = 1; //default
-    uint messageID = 1;//default
+    uint messageId = 1;//default
     structMQTTData strMQTTdata;
 }structMQTTSendPackage;
 
@@ -359,8 +359,8 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
   memcpy(&StrCfg1.Parameter.WifiSSID,"PicoPiece",sizeof("PicoPiece"));
   memcpy(&StrCfg1.Parameter.WifiPASS, "30032020", sizeof("30032020"));
-  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
+  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
@@ -372,7 +372,7 @@ void setup()
   MQTT_JsonDoc["type"]    = strMQTTSendPackage.type;
   MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
   MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
-  MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID;
+  MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId;
   MQTT_JsonDoc["data"]["deviceId"] = strMQTTSendPackage.strMQTTdata.deviceId;
   MQTT_JsonDoc["data"]["jwt"] = strMQTTSendPackage.strMQTTdata.jwt;
   serializeJson(MQTT_JsonDoc, Serial);*/
@@ -657,7 +657,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["type"]    = iotSendSensors;
     MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
-    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
+    MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["userId"] = 5;
     MQTT_JsonDoc["data"]["temp"] = temp;
@@ -694,7 +694,7 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["type"]    = iotSendTemp;
     MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
-    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
+    MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["userId"] = 5;
     MQTT_JsonDoc["data"]["temp"] = temp;
@@ -729,7 +729,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["type"]    = iotSendSpo2;
     MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
-    MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
+    MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["userId"] = 5;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
