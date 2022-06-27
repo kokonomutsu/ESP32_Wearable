@@ -355,8 +355,10 @@ void setup()
     ESP.restart();
   }
   /* Test default wifi */
-  memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
-  memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
+  //memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
+  //memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
+  memcpy(&StrCfg1.Parameter.WifiSSID,"PicoPiece",sizeof("PicoPiece"));
+  memcpy(&StrCfg1.Parameter.WifiPASS, "30032020", sizeof("30032020"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
   memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
@@ -657,10 +659,13 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["userId"] = 5;
     MQTT_JsonDoc["data"]["temp"] = temp;
-    MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
+    MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
-    MQTT_JsonDoc["data"]["time"] = strTime;
+    MQTT_JsonDoc["data"]["dateTime"] = strTime;
+    MQTT_JsonDoc["data"]["evaluationResult"] = "";
+    MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
     wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", msg);
@@ -691,8 +696,11 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["userId"] = 5;
     MQTT_JsonDoc["data"]["temp"] = temp;
-    MQTT_JsonDoc["data"]["time"] = strTime;
+    MQTT_JsonDoc["data"]["dateTime"] = strTime;
+    MQTT_JsonDoc["data"]["evaluationResult"] = "";
+    MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
     wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", msg);
@@ -723,9 +731,12 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageID"]   = strMQTTSendPackage.messageID++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["heartrate"] = HeartRate;
+    MQTT_JsonDoc["data"]["userId"] = 5;
+    MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
-    MQTT_JsonDoc["data"]["time"] = strTime;
+    MQTT_JsonDoc["data"]["dateTime"] = strTime;
+    MQTT_JsonDoc["data"]["evaluationResult"] = "";
+    MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
     wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "spo2", msg);
