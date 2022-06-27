@@ -359,8 +359,8 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
   memcpy(&StrCfg1.Parameter.WifiSSID,"PicoPiece",sizeof("PicoPiece"));
   memcpy(&StrCfg1.Parameter.WifiPASS, "30032020", sizeof("30032020"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
-  //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
+  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
