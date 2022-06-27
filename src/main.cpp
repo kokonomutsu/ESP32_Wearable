@@ -617,7 +617,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "sensor", msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "iot", msg);
     return true;
   }
   return false;
@@ -652,7 +652,7 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "temp", msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "iot", msg);
     return true;
   }
   return false;
@@ -688,7 +688,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
-    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "spo2", msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "iot", msg);
     return true;
   }
   return false;
