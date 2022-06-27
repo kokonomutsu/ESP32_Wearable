@@ -127,7 +127,7 @@ static void reconnect(uint8_t *DeviceID)
             Serial.println("connected");
             // Subscribe
             char topic[43];
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "productinfo");
+            /*sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "productinfo");
             client.subscribe(topic);
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "restart");
             client.subscribe(topic);
@@ -138,6 +138,8 @@ static void reconnect(uint8_t *DeviceID)
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "interval");
             client.subscribe(topic);
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "wificonfig");
+            client.subscribe(topic);*/
+            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "iot");
             client.subscribe(topic);
         }
         else {
