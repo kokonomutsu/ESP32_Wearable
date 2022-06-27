@@ -1,7 +1,9 @@
 #ifndef _BLE_FUNCTION_H_
 #define _BLE_FUNCTION_H_
 
-void BLE_Setup(void);
+#include <stdint.h>
+
+void BLE_Init(void);
 
 void BLE_sendData(unsigned char* pValue, int length);
 

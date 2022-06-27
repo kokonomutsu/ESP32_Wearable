@@ -1,38 +1,14 @@
 #include <Arduino.h>
 #include <BLE_function.h>
 #include <sensor_function.h>
+#include <display_function.h>
 
 #include <IO_function.h>
 #include <Kernel_IO_function.h>
+#include <BLEDevice.h>
+#include "esp_bt_device.h"
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-
-#define SCREEN_WIDTH 128    // OLED display width, in pixels
-#define SCREEN_HEIGHT 64    // OLED display height, in pixels
-#define OLED_RESET -1       // Reset pin # (or -1 if sharing Arduino reset pin)
-
-#define MAX_BRIGHTNESS 255
-#define bufferLength 100
-
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-
-bool WorkMode = false;
-bool start = false;
-
-//uint8_t value[] = "HR:xxx,SPO2:xx,TEMP:xx";
-char value[] = "HR:%d,SPO2:%d,TEMP:%d";
-
-/* Temp varialble */
-double temp_obj;
-/* Heartbeat varialble */
-int beatAvg = 0;
-int AvgMax = 0;
-bool agvValueFlag = false;
-/* SPO2 varialble */
-int oxygen;
-int SPO2Max = 0;
-bool spo2ValueFlag = false;
+#include "main.h"
 
 /*  IO Variable */
 extern IO_Struct pLED1, pLED1, pLED3;
@@ -40,56 +16,121 @@ structIO_Manage_Output strLED_RD, strLED_GR, strLED_BL;
 extern IO_Struct pBUT_1, pBUT_2;
 structIO_Button strIO_Button_Value, strOld_IO_Button_Value;
 
-void OLED_Display(double temp, int heartBeat, int32_t SPO2, bool mode);
+eUSER_TASK_STATE eUserTask_State = E_STATE_STARTUP_TASK;
+bool bFlag_1st_TaskState = true;
+bool startFlag = false;
+bool WorkMode = true;
 
-void task_Temp(void *parameter) {
+uint16_t intervalTimeMs;
+
+/* Sensor Varialble */
+int MaxSPO2 = 0;
+int MaxHearbeat = 0;
+
+void task_Application(void *parameter) {
   for(;;) {
-    temp_obj = mlx_getTemp();
-    if(WorkMode)
+    switch (eUserTask_State)
     {
-      OLED_Display(temp_obj, beatAvg, oxygen, true);
-    }
-    else
-    {
-      if(start)
-      {
-        if(!agvValueFlag){
-          if(AvgMax <= beatAvg)
-            AvgMax = beatAvg;
-          else
-            agvValueFlag = true;
-        }
-        if(!spo2ValueFlag){
-          if(SPO2Max <= oxygen)
-            SPO2Max = oxygen;
-          else
-            spo2ValueFlag = true;
-        }
-        if(agvValueFlag&&spo2ValueFlag)
+      case E_STATE_STARTUP_TASK:
+        if(bFlag_1st_TaskState)
         {
-          agvValueFlag = false;
-          spo2ValueFlag = false;
-          start = false;
+          //read work mode
+          display_config(sensor_getTemp());
+          bFlag_1st_TaskState = false;
         }
         else{
-          OLED_Display(temp_obj, AvgMax, SPO2Max, false);
+          //Check finger in?
+          display_config(sensor_getTemp());
+          
         }
-      }
-      else
-      {
-        OLED_Display(temp_obj, AvgMax, SPO2Max, true);
-      }
+        break;
+      case E_STATE_ONESHOT_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
+          bFlag_1st_TaskState = false;
+        }
+        else{
+          if(startFlag){
+            startFlag = false;
+            MaxSPO2 = 0;
+            MaxHearbeat = 0;
+
+            eUserTask_State = E_STATE_PROCESSING_TASK;
+            bFlag_1st_TaskState = true;
+          }
+          else{
+            display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
+          }
+        }
+        break;
+      case E_STATE_PROCESSING_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          display_config2(sensor_getTemp());
+          bFlag_1st_TaskState = false;
+        }
+        else{
+          if(sensor_processing(MaxSPO2, MaxHearbeat))
+          {
+            eUserTask_State = E_STATE_ONESHOT_TASK;
+            bFlag_1st_TaskState = true;
+          }
+          else{
+            display_config2(sensor_getTemp());
+          }
+        }
+        break;
+      case E_STATE_CONTINUOUS_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          display_config1(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
+          bFlag_1st_TaskState = false;
+        }
+        else{
+          display_config1(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
+        }
+        break;
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
-void task_MAX3010x(void *parameter) {
+void task_IO(void *parameter) {
   for(;;) {
-    MAX30105_getValue(oxygen, beatAvg);
+    if(START_BUT_VAL == eButtonSingleClick)
+    {
+      START_BUT_VAL = eButtonHoldOff;
+      startFlag = true;
+      LED_BLUE_TOG;
+      display_config2(sensor_getTemp());
+    }
+
+    if(MODE_BUT_VAL == eButtonSingleClick)
+    {
+      MODE_BUT_VAL = eButtonHoldOff;
+      LED_GREEN_TOG;
+      bFlag_1st_TaskState = true;
+      if(WorkMode){
+        eUserTask_State = E_STATE_ONESHOT_TASK;
+        WorkMode = false;
+      }
+      else{
+        eUserTask_State = E_STATE_CONTINUOUS_TASK;
+        WorkMode = true;
+      }
+    }
+    else if(MODE_BUT_VAL == eButtonDoubleClick){
+      MODE_BUT_VAL = eButtonHoldOff;
+      LED_RED_TOG;
+      bFlag_1st_TaskState = true;
+      eUserTask_State = E_STATE_STARTUP_TASK;
+    }
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
-void task_IO(void *parameter)
+
+void task_Kernel_IO(void *parameter)
 {
   for(;;) {
     vIO_Output(&strLED_GR, &pLED1);
@@ -114,14 +155,40 @@ void task_IO(void *parameter)
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
+
+String getMACinString() {
+  const uint8_t* macAddress = esp_bt_dev_get_address();
+  char charMAC[18];
+
+  sprintf(charMAC, "%02X", (int)macAddress[0]);
+  charMAC[2] = ':';
+  sprintf(charMAC+3, "%02X", (int)macAddress[1]);
+  charMAC[5] = ':';
+
+  sprintf(charMAC+6, "%02X", (int)macAddress[2]);
+  charMAC[8] = ':';
+  sprintf(charMAC+9, "%02X", (int)macAddress[3]);
+  charMAC[11] = ':';
+
+  sprintf(charMAC+12, "%02X", (int)macAddress[4]);
+  charMAC[14] = ':';
+  sprintf(charMAC+15, "%02X", (int)macAddress[5]);
+
+  return (String)charMAC;
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
+  /* BLE setup */
+  Serial.println("[DEBUG]: SYSTEM INIT!");
+  Serial.println("[DEBUG]: LED INIT!");
   LED1_Init(&pLED1);
   LED2_Init(&pLED2);
   LED3_Init(&pLED3);
 
+  Serial.println("[DEBUG]: BUTTON INIT!");
   strIO_Button_Value.bFlagNewButton =  eFALSE;
   BUTTON1_Init(&pBUT_1);
   strIO_Button_Value.bButtonState[eButton1] = eButtonRelease;
@@ -131,75 +198,29 @@ void setup() {
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   
-  sensor_setUp();
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
- 
-  display.clearDisplay();
-  display.setCursor(25,15);  
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.println("FPT Wearable");
-  display.setCursor(25,35);
-  display.setTextSize(1);
-  display.print("Press Start BT!");
-  display.display();
-
-  //BLE_Setup();
+  //sensor_Setup();
+  //display_Setup();
+  BLE_Init();
   delay(1000);
+  String myMACString = getMACinString();
+  Serial.println("My MAC address = " + myMACString);
   //wifi_Setup();
-  xTaskCreate(task_Temp,"Task 1",8192,NULL,2,NULL);
-  xTaskCreate(task_MAX3010x,"Task 2",8192,NULL,1,NULL);
-  xTaskCreate(task_IO,"Task 3",8192,NULL,1,NULL);
+  //xTaskCreate(task_display,"Task 1",8192,NULL,2,NULL);
+  //TaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
+  xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
+  //xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-  if(strIO_Button_Value.bButtonState[eButton2]==eButtonSingleClick)
+  //sensor_updateValue();
+  delay(1000);
+  if(BLE_isConnected())
   {
-    strIO_Button_Value.bButtonState[eButton2] = eButtonHoldOff;
-    vIO_ConfigOutput(&strLED_GR, (enumbool)(1 - (int)pLED1.writeSta()), 1, 1, eFALSE);
-    WorkMode = !WorkMode;
-    SPO2Max = 0;
-    AvgMax = 0;
+    static uint32_t CountTick = 0;
+    static char BLETestString[32] = "Hello";
+    sprintf(BLETestString, "CountTickS: %d", CountTick++);
+    Serial.println(BLETestString);
+    BLE_sendData((uint8_t*)&BLETestString, 20);
   }
-  if(strIO_Button_Value.bButtonState[eButton1]==eButtonSingleClick)
-  {
-    strIO_Button_Value.bButtonState[eButton1] = eButtonHoldOff;
-    if(!WorkMode)
-    {
-      vIO_ConfigOutput(&strLED_RD, eTRUE, 2, 50, eFALSE);
-      OLED_Display(temp_obj, AvgMax, SPO2Max, false);
-
-      SPO2Max = 0;
-      AvgMax = 0;
-      start = true;
-    }
-  }
-}
-
-void OLED_Display(double temp, int heartBeat, int32_t SPO2, bool mode)
-{
-  display.clearDisplay();
-  display.setCursor(0,10);  
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.print("Temperature: ");
-  display.print(temp);
-  display.print((char)247);
-  display.println("C");
-  //display.display();
-  display.setCursor(0,20);
-  if(mode)
-  {
-    
-    display.print("BPM = ");
-    display.println(heartBeat);
-    display.print("SPO2 = ");
-    display.println(SPO2);
-  }
-  else{
-    display.print("Processing...");
-  }
-  display.display(); 
 }
