@@ -126,12 +126,14 @@
  C:/Users/DThree/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/spi_flash/include/esp_spi_flash_counters.h \
  C:/Users/DThree/.platformio/packages/framework-arduinoespressif32/variants/esp32/pins_arduino.h \
  C:/Users/DThree/.platformio/packages/framework-arduinoespressif32/libraries/EEPROM/src/EEPROM.h \
- .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.h \
- .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.hpp \
- .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson/Configuration.hpp \
  lib/IO_Lib/IO_function.h lib/IO_Lib/IO_config.h \
  lib/IO_Lib/Data_Typedef.h lib/Kernel_IO_Lib/Kernel_IO_function.h \
  lib/Kernel_IO_Lib/Kernel_IO_typedef.h lib/IO_Lib/IO_config.h \
  lib/IO_Lib/Data_Typedef.h lib/BLE_Lib/BLE_function.h \
  lib/Sensor_Lib/sensor_function.h lib/Display_Lib/display_function.h \
- lib/WiFi_Lib/wifi_function.h src/main.h
+ lib/WiFi_Lib/wifi_function.h src/main.h \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.h \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.hpp \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson/Configuration.hpp \
+ lib/JWT_Lib/CloudFPTIoTCoreMqtt.h lib/JWT_Lib/jwt.h \
+ lib/JWT_Lib/crypto/nn.h lib/JWT_Lib/ciotc_config.h

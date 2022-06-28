@@ -82,8 +82,6 @@ bool wifi_mqtt_isConnected(void)
     {
         if (client.connected())
             return true;
-        else
-            return false;
     }
     return false;
 }
@@ -98,19 +96,23 @@ void wifi_mqtt_publish(uint8_t *DeviceID, String topic, char* dataBuffer)
 String wifi_ntp_getTime(void)
 {
     return (timeClient.getFormattedTime());
+    //return "00:00:00";
 }
 
 int wifi_ntp_getYears(void)
 {
     return timeClient.getYears();
+    //return 0;
 }
 int wifi_ntp_getMonths(void)
 {
     return timeClient.getMonths();
+    //return 0;
 }
 int wifi_ntp_getDays(void)
 {
     return timeClient.getDate();
+    //return 0;
 }
 /****************************************************************************/
 /***              Local Function			                               **/
@@ -122,12 +124,12 @@ static void reconnect(uint8_t *DeviceID)
     {
         Serial.print("Attempting MQTT connection...");
         // Attempt to connect
-        if (client.connect("ESP32Client")) 
+        if (client.connect("ESPxxClient")) 
         {
             Serial.println("connected");
             // Subscribe
             char topic[43];
-            /*sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "productinfo");
+            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "productinfo");
             client.subscribe(topic);
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "restart");
             client.subscribe(topic);
@@ -138,8 +140,6 @@ static void reconnect(uint8_t *DeviceID)
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "interval");
             client.subscribe(topic);
             sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "wificonfig");
-            client.subscribe(topic);*/
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "iot");
             client.subscribe(topic);
         }
         else {

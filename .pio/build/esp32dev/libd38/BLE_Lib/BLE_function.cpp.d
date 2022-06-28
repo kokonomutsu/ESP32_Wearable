@@ -157,4 +157,7 @@
  C:/Users/DThree/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src/BLEServer.h \
  lib/BLE_Lib/Queue.h \
  C:/Users/DThree/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/bt/host/bluedroid/api/include/api/esp_bt_device.h \
- lib/BLE_Lib/BLE_function.h
+ lib/BLE_Lib/BLE_function.h \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.h \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.hpp \
+ .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson/Configuration.hpp
