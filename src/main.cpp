@@ -415,7 +415,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   sensor_updateValue();
   wifi_loop(fullDeviceID);
-  delay(1000);
+  //delay(1000);
   if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
   {
     bFlagGetJWT = false;
