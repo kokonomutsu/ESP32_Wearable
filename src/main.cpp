@@ -414,14 +414,19 @@ void loop() {
   static bool bFlagGetJWT = false;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
-  wifi_loop(StrCfg1.Parameter.DeviceID);
-
+  wifi_loop(fullDeviceID);
+  delay(1000);
   if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
   {
     bFlagGetJWT = false;
     /* Try get JWT */
     Serial.println(getJwt().c_str());
   }
+
+  /*if(wifi_mqtt_isConnected()==false)
+  {
+    bFlagGetJWT = false;
+  }*/
 }
 
 /****************************************************************************/

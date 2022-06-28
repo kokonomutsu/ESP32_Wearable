@@ -5,7 +5,7 @@ bool wifi_connect(char* ssid, char* password);
 
 bool wifi_setup_mqtt(void (*callback)(char* topic, uint8_t* message, unsigned int length), char* ssid, char* password, char* mqtt_server, uint16_t port);
 
-bool wifi_loop(uint8_t *DeviceID);
+bool wifi_loop(char* DeviceID);
 
 void wifi_disconnect(void);
 

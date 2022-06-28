@@ -13,7 +13,7 @@
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
-static void reconnect(uint8_t *DeviceID);
+static void reconnect(char* fullDeviceID);
 
 /****************************************************************************/
 /***        Local Variables                                               ***/
@@ -61,12 +61,12 @@ void wifi_disconnect(void)
     WiFi.disconnect(true);
 }
 
-bool wifi_loop(uint8_t *DeviceID)
+bool wifi_loop(char* fullDeviceID)
 {
     if(WiFi.status() == WL_CONNECTED)
     {
         if (!client.connected()) {
-            reconnect(DeviceID);
+            reconnect(fullDeviceID);
         }
         client.loop();
         timeClient.update();
@@ -115,31 +115,21 @@ int wifi_ntp_getDays(void)
 /****************************************************************************/
 /***              Local Function			                               **/
 /****************************************************************************/
-static void reconnect(uint8_t *DeviceID) 
+static void reconnect(char* fullDeviceID) 
 {
   // Loop until we're reconnected
     while (!client.connected()) 
     {
         Serial.print("Attempting MQTT connection...");
         // Attempt to connect
-        if (client.connect("ESP32Client")) 
+        if (client.connect(fullDeviceID)) 
         {
             Serial.println("connected");
             // Subscribe
             char topic[43];
-            /*sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "productinfo");
-            client.subscribe(topic);
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "restart");
-            client.subscribe(topic);
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "measure");
-            client.subscribe(topic);
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "modeselect");
-            client.subscribe(topic);
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "interval");
-            client.subscribe(topic);
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "wificonfig");
-            client.subscribe(topic);*/
-            sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "iot");
+            //sprintf(topic, "cmnd/FPT_FCCIoT_%C%C%C%C/%s", DeviceID[0], DeviceID[1], DeviceID[2], DeviceID[3], "iot");
+            sprintf(topic, "cmnd/%s/%s", fullDeviceID, "iot");
+            Serial.println(topic);
             client.subscribe(topic);
         }
         else {
