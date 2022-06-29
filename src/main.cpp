@@ -361,11 +361,12 @@ void setup()
     ESP.restart();
   }
   /* Test default wifi */
-  //memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
-  //memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
-  memcpy(&StrCfg1.Parameter.WifiSSID,"PicoPiece",sizeof("PicoPiece"));
-  memcpy(&StrCfg1.Parameter.WifiPASS, "30032020", sizeof("30032020"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));
+  memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
+  memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
+  //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
+  //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
+  //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
+  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
   //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
