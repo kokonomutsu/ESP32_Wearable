@@ -61,7 +61,7 @@ char fullDeviceID[20];
 char strTime[30];
 char fullTopic[50];
 char msg[2000];
-uint8_t bUserID = 6;
+uint8_t bUserId = 6;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -586,7 +586,7 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
       if(MQTT_JsonReceiveDoc["type"] == 7){
         if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
         {
-          bUserID = MQTT_JsonReceiveDoc["data"]["userID"];
+          bUserId = MQTT_JsonReceiveDoc["data"]["userId"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
         }
@@ -594,7 +594,7 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
       else if(MQTT_JsonReceiveDoc["type"] == 8){
         if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
         {
-          bUserID = MQTT_JsonReceiveDoc["data"]["userID"];
+          bUserId = MQTT_JsonReceiveDoc["data"]["userId"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
         }
@@ -624,7 +624,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = bUserID;
+    MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
@@ -661,7 +661,7 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = bUserID;
+    MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
     MQTT_JsonDoc["data"]["evaluationResult"] = "";
@@ -696,7 +696,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = bUserID;
+    MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
