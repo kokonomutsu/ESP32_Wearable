@@ -65,8 +65,8 @@ char msg[2000];
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
 // Initialize WiFi and MQTT for this board
-Client *netClient;
-CloudIoTCoreDevice *device;
+//Client *netClient;
+CloudIoTCoreDevice device;
 unsigned long iat = 0;
 String jwt;
 // Forward global callback declarations
@@ -115,7 +115,7 @@ structMQTTSendPackage strMQTTSendPackage;
 String getJwt(){
   iat = time(nullptr);
   Serial.println("Refreshing JWT");
-  jwt = device->createJWT(iat, jwt_exp_secs);
+  jwt = device.createJWT(iat, jwt_exp_secs);
   return jwt;
 }
 
@@ -284,11 +284,17 @@ void task_IO(void *parameter)
     {
       START_BUT_VAL = eButtonHoldOff;
       LED_RED_TOG;
+
+      if(wifi_mqtt_isConnected())
+        Serial.println(getJwt());
+      /*
       if(wifi_mqtt_isConnected())
         wifi_disconnect();
       else
         if(wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883))
           App_Parameter_Save(&StrCfg1);
+      */
+
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -404,6 +410,7 @@ void setup()
   BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
   delay(1000);
   wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
+  
   xTaskCreate(task_BLE,"Task 1",8192,NULL,2,NULL);
   xTaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
@@ -411,7 +418,7 @@ void setup()
 }
 
 void loop() {
-  static bool bFlagGetJWT = false;
+  static bool bFlagGetJWT = true;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
   wifi_loop(fullDeviceID);

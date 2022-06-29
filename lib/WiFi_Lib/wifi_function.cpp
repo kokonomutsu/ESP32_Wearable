@@ -82,8 +82,6 @@ bool wifi_mqtt_isConnected(void)
     {
         if (client.connected())
             return true;
-        else
-            return false;
     }
     return false;
 }
@@ -98,19 +96,23 @@ void wifi_mqtt_publish(uint8_t *DeviceID, String topic, char* dataBuffer)
 String wifi_ntp_getTime(void)
 {
     return (timeClient.getFormattedTime());
+    //return "00:00:00";
 }
 
 int wifi_ntp_getYears(void)
 {
     return timeClient.getYears();
+    //return 0;
 }
 int wifi_ntp_getMonths(void)
 {
     return timeClient.getMonths();
+    //return 0;
 }
 int wifi_ntp_getDays(void)
 {
     return timeClient.getDate();
+    //return 0;
 }
 /****************************************************************************/
 /***              Local Function			                               **/
