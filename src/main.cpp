@@ -61,6 +61,7 @@ char fullDeviceID[20];
 char strTime[30];
 char fullTopic[50];
 char msg[2000];
+uint8_t bUserID = 6;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -366,8 +367,8 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
-  //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
+  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
+  memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
@@ -585,6 +586,7 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
       if(MQTT_JsonReceiveDoc["type"] == 7){
         if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
         {
+          bUserID = MQTT_JsonReceiveDoc["data"]["userID"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
         }
@@ -592,6 +594,7 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
       else if(MQTT_JsonReceiveDoc["type"] == 8){
         if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
         {
+          bUserID = MQTT_JsonReceiveDoc["data"]["userID"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
         }
@@ -621,7 +624,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = 5;
+    MQTT_JsonDoc["data"]["userId"] = bUserID;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
@@ -658,7 +661,7 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = 5;
+    MQTT_JsonDoc["data"]["userId"] = bUserID;
     MQTT_JsonDoc["data"]["temp"] = temp;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
     MQTT_JsonDoc["data"]["evaluationResult"] = "";
@@ -693,7 +696,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
     MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
-    MQTT_JsonDoc["data"]["userId"] = 5;
+    MQTT_JsonDoc["data"]["userId"] = bUserID;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
