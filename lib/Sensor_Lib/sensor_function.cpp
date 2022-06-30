@@ -54,7 +54,8 @@ void sensor_Setup(void)
     int pulseWidth = 411; //Options: 69, 118, 215, 411
     int adcRange = 16384; //Options: 2048, 4096, 8192, 16384
     */
-    particleSensor.setup(0x1F, 4, 2, 400, 411, 16384);
+    //particleSensor.setup(0x1F, 4, 2, 400, 411, 16384);
+    particleSensor.setup(0x00, 4, 2, 400, 411, 16384);
     particleSensor.enableDIETEMPRDY();
     
     mlx.begin(0x5A, &Wire);         //Initialize MLX90614
@@ -73,6 +74,24 @@ int sensor_getHeardBeat(void)
 int sersor_getSPO2(void)
 {
   return (int)SPO2Value;
+}
+
+void sersor_SPO2_shutdown(void)
+{
+  particleSensor.shutDown();
+  particleSensor.setup(0x00, 4, 2, 400, 411, 16384);
+}
+
+void sersor_SPO2_wakeup(void)
+{
+  particleSensor.wakeUp();
+  particleSensor.setup(0x1F, 4, 2, 400, 411, 16384);
+}
+
+void sersor_reset_data_Value(void)
+{
+  beatsPerMinute = 0;
+  SPO2Value = 0;
 }
 
 void sensor_updateValue(void)

@@ -211,6 +211,11 @@ void task_Application(void *parameter)
           display_single_spo2_shot(0,0);
           bFlag_1st_TaskState = false;
           startFlag = true;
+          /* Wakeup device */
+          sersor_SPO2_wakeup();
+          sersor_reset_data_Value();
+          MaxSPO2 = 0;
+          MaxHearbeat = 0;
         }
         else{
           if(sensor_processing(MaxSPO2, MaxHearbeat))
@@ -224,6 +229,8 @@ void task_Application(void *parameter)
             vTaskDelay(5000);
             eUserTask_State = E_STATE_STARTUP_TASK;
             bFlag_1st_TaskState = true;
+            /* Shut down device */
+            sersor_SPO2_shutdown();
           }
           else
           {
