@@ -62,6 +62,8 @@ char strTime[30];
 char fullTopic[50];
 char msg[2000];
 uint8_t bUserId = 6;
+/* Working mode */
+uint8_t bDeviceMode = MODE_DUAL;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -309,17 +311,23 @@ void task_IO(void *parameter)
     {
       MODE_BUT_VAL = eButtonHoldOff;
       LED_GREEN_TOG;
-      bFlag_1st_TaskState = true;
-      if((eUserTask_State == E_STATE_STARTUP_TASK) || (eUserTask_State == E_STATE_CONTINUOUS_TASK))
-        eUserTask_State = E_STATE_ONESHOT_TASK;
-      else
-        eUserTask_State = E_STATE_CONTINUOUS_TASK;
+      if(bDeviceMode == MODE_WIFI)
+      {
+        bDeviceMode = MODE_BLE;
+        StrCfg1.Parameter.bLastMode = bDeviceMode;
+        App_Parameter_Save(&StrCfg1);
+      }
+      else if(bDeviceMode == MODE_BLE)
+      {
+        bDeviceMode = MODE_WIFI;
+        StrCfg1.Parameter.bLastMode = bDeviceMode;
+        App_Parameter_Save(&StrCfg1);
+      }
     }
     else if(MODE_BUT_VAL == eButtonDoubleClick){
       MODE_BUT_VAL = eButtonHoldOff;
       LED_RED_TOG;
-      bFlag_1st_TaskState = true;
-      eUserTask_State = E_STATE_STARTUP_TASK;
+
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -368,6 +376,9 @@ void setup()
     App_Parameter_Save(&StrCfg1);
     ESP.restart();
   }
+  /* Load last mode */
+  bDeviceMode = StrCfg1.Parameter.bLastMode;
+  
   /* Test default wifi */
   memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
   memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
@@ -412,15 +423,27 @@ void setup()
   BUTTON2_Init(&pBUT_2);
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
-  
+
+  /* Device setup */
   sensor_Setup();
   display_Setup();
   Serial.println("[DEBUG]: BLE INIT!");
-  BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
-  delay(1000);
-  wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
+  /* Check device mode */
+  if((bDeviceMode == MODE_BLE)||(bDeviceMode == MODE_DUAL))
+  {
+    BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
+  }
+  if((bDeviceMode == MODE_WIFI)||(bDeviceMode == MODE_DUAL))
+  {
+    delay(1000);
+    wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
+  }
   
-  xTaskCreate(task_BLE,"Task 1",8192,NULL,2,NULL);
+  /* Create task */
+  if((bDeviceMode == MODE_BLE)||(bDeviceMode == MODE_DUAL))
+  {
+    xTaskCreate(task_BLE,"Task 1",8192,NULL,2,NULL);
+  }
   xTaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
   xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
@@ -430,15 +453,16 @@ void loop() {
   static bool bFlagGetJWT = true;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
-  wifi_loop(fullDeviceID);
-  //delay(1000);
-  if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
+  if((bDeviceMode == MODE_WIFI)||(bDeviceMode == MODE_DUAL))
   {
-    bFlagGetJWT = false;
-    /* Try get JWT */
-    Serial.println(getJwt().c_str());
+    wifi_loop(fullDeviceID);
+    if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
+    {
+      bFlagGetJWT = false;
+      /* Try get JWT */
+      Serial.println(getJwt().c_str());
+    }
   }
-
   /*if(wifi_mqtt_isConnected()==false)
   {
     bFlagGetJWT = false;

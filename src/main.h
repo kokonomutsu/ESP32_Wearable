@@ -23,6 +23,10 @@ typedef enum {
     E_STATE_CONTINUOUS_TASK,
 } eUSER_TASK_STATE;
 
+#define MODE_BLE  1
+#define MODE_WIFI 2
+#define MODE_DUAL 3
+
 typedef union Struct_Flash_Config_Parameter
 {
     struct
@@ -34,6 +38,7 @@ typedef union Struct_Flash_Config_Parameter
         char WifiPASS[PASS_MAX_SIZE];
         char ServerURL[URL_MAX_SIZE];
         uint8_t PrivateKey[PRIVATE_KEY_SIZE];
+        uint8_t bLastMode;
     }Parameter;
     unsigned char paraBuffer[sizeof(Parameter)];
 }StrConfigPara;
