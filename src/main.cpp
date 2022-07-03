@@ -69,7 +69,7 @@ uint8_t bDeviceMode = MODE_DUAL;
 DynamicJsonDocument MQTT_JsonDoc(1024);
 // Initialize WiFi and MQTT for this board
 //Client *netClient;
-CloudIoTCoreDevice device;
+CloudIoTCoreDevice *device;
 unsigned long iat = 0;
 String jwt;
 // Forward global callback declarations
@@ -118,7 +118,7 @@ structMQTTSendPackage strMQTTSendPackage;
 String getJwt(){
   iat = time(nullptr);
   Serial.println("Refreshing JWT");
-  jwt = device.createJWT(iat, jwt_exp_secs);
+  jwt = device->createJWT(iat, jwt_exp_secs);
   return jwt;
 }
 
@@ -424,6 +424,11 @@ void setup()
   strIO_Button_Value.bButtonState[eButton2] = eButtonRelease;
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
 
+  /* Add device cloud */
+  device = new CloudIoTCoreDevice(
+      project_id, location, registry_id, device_id,
+      private_key_str);
+
   /* Device setup */
   sensor_Setup();
   display_Setup();
@@ -484,7 +489,6 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiSSID[i] = pu8Data[i];
         for(int j=i;j<SSID_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
-        
         Serial.println(StrCfg1.Parameter.WifiSSID);
       }
       break;
@@ -545,7 +549,15 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       BLE_configMsg(12, 0, E_DEVICE_DATA_ID, SeqID++, 2, StrCfg1.Parameter.DeviceID);
       break;
     case E_PRIVATE_KEY_ID:
-      
+      if((MsgLength - 8) <= URL_MAX_SIZE)
+      {
+        int i;
+        for(i=0;i<(MsgLength - 8);i++)
+          StrCfg1.Parameter.PrivateKey[i] = pu8Data[i];
+        for(int j=i;j<URL_MAX_SIZE;j++)
+          StrCfg1.Parameter.PrivateKey[j] = 0x00;
+        Serial.println(StrCfg1.Parameter.PrivateKey);
+      }
       break;
     case E_ONESHOT_MODE_ID:
       LED_GREEN_TOG;

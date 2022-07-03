@@ -37,7 +37,7 @@ typedef union Struct_Flash_Config_Parameter
         char WifiSSID[SSID_MAX_SIZE];
         char WifiPASS[PASS_MAX_SIZE];
         char ServerURL[URL_MAX_SIZE];
-        uint8_t PrivateKey[PRIVATE_KEY_SIZE];
+        char PrivateKey[PRIVATE_KEY_SIZE];
         uint8_t bLastMode;
     }Parameter;
     unsigned char paraBuffer[sizeof(Parameter)];
