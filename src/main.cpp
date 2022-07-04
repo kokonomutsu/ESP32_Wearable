@@ -20,6 +20,7 @@
 void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
 bool App_BLE_SendTemp(double temp);
 bool App_BLE_SendSensor(int SPO2, int HeartRate);
+bool App_BLE_SendTestConnection(bool bConnectionStatus);
 
 void App_mqtt_callback(char* topic, byte* message, unsigned int length);
 bool App_mqtt_SendTemp(double temp);
@@ -293,22 +294,42 @@ void task_Application(void *parameter)
           bFlag_1st_TaskState = false;
           /* Connect server */
           wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
-          vTaskDelay(5000);
         }
         else{
+          static uint32_t bTestConnectionTimeOut = 0;
           if(wifi_mqtt_isConnected())
           {
             display_server_connect_state(true);
-            /* Feedback to BLE */
             eUserTask_State = E_STATE_STARTUP_TASK;
             bFlag_1st_TaskState = true;
+            LED_BLUE_TOG;
+            bDeviceMode = MODE_WIFI;
+            StrCfg1.Parameter.bLastMode = bDeviceMode;
+            App_Parameter_Save(&StrCfg1);
+            /* Feedback to BLE */
+            App_BLE_SendTestConnection(true);
+            vTaskDelay(1000);
+            //ESP.restart();
           }
           else
           {
-            display_server_connect_state(false);
-            /* Feedback to BLE */
-            eUserTask_State = E_STATE_STARTUP_TASK;
-            bFlag_1st_TaskState = true;
+            if(bTestConnectionTimeOut++<=10)//10s
+            {
+              vTaskDelay(1000);
+            }
+            else
+            {
+              display_server_connect_state(false);
+              /* Feedback to BLE */
+              eUserTask_State = E_STATE_STARTUP_TASK;
+              bFlag_1st_TaskState = true;
+              LED_RED_TOG;
+              bDeviceMode = MODE_WIFI;
+              StrCfg1.Parameter.bLastMode = bDeviceMode;
+              App_Parameter_Save(&StrCfg1);
+              /* Feedback to BLE */
+              App_BLE_SendTestConnection(false);
+            }
           }
         }
       break;
@@ -648,6 +669,23 @@ bool App_BLE_SendTemp(double temp)
     int value = (int)(temp*10);
     uint8_t tempMsg[5] = {(uint8_t)(value/1000 + 48), (uint8_t)((value%1000)/100 + 48), (uint8_t)((value%100)/10 + 48), '.', (uint8_t)(value%10 + 48)};
     BLE_configMsg(13, 0, E_TEMP_DATA_ID, SeqID++, 1, tempMsg);
+    return true;
+  }
+  return false;
+}
+
+bool App_BLE_SendTestConnection(bool bConnectionStatus)
+{
+  if(BLE_isConnected())
+  {
+    if(bConnectionStatus==true)
+    {
+      BLE_configMsg(9, 0, E_TEST_CONNECTION_ID, SeqID++, 1, (uint8_t*)"1");
+    }
+    else
+    {
+      BLE_configMsg(9, 0, E_TEST_CONNECTION_ID, SeqID++, 1, (uint8_t*)"0");
+    }
     return true;
   }
   return false;

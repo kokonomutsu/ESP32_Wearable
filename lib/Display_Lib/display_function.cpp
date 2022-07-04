@@ -105,27 +105,28 @@ void display_state(uint8_t bStateUserTask)
 {
   display.clearDisplay();
   display.setTextColor(WHITE);
-  display.setTextSize(1);
-  display.setCursor(5,15);  
+  display.setTextSize(2);
+  display.setCursor(25,15);  
   display.print("STATE:");
-  display.setCursor(1,30); 
+  display.setTextSize(1);
+  display.setCursor(10,40); 
   switch (bStateUserTask)
   {
   case E_STATE_TEST_CONNECTION_TASK/* constant-expression */:
     /* code */
-    display.print("TEST CONNECTION TASK");
+    display.print("TEST CONNECTION ");
     break;
   case E_STATE_STARTUP_TASK/* constant-expression */:
     /* code */
-    display.print("START UP TASK");
+    display.print("START UP ");
     break;
   case E_STATE_ONESHOT_TASK_TEMP/* constant-expression */:
     /* code */
-    display.print("MEASURE TEMP TASK");
+    display.print("MEASURE TEMP ");
     break;
   case E_STATE_ONESHOT_TASK_SPO2/* constant-expression */:
     /* code */
-    display.print("MEASURE SPO2 TASK");
+    display.print("MEASURE SPO2 ");
     break;
   default:
     break;
