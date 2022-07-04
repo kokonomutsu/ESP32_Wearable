@@ -290,23 +290,7 @@ void task_IO(void *parameter)
         display_config2(sensor_getTemp());
       }
     }
-    else if(START_BUT_VAL == eButtonDoubleClick)
-    {
-      START_BUT_VAL = eButtonHoldOff;
-      LED_RED_TOG;
-
-      if(wifi_mqtt_isConnected())
-        Serial.println(getJwt());
-      /*
-      if(wifi_mqtt_isConnected())
-        wifi_disconnect();
-      else
-        if(wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883))
-          App_Parameter_Save(&StrCfg1);
-      */
-
-    }
-
+    
     if(MODE_BUT_VAL == eButtonSingleClick)
     {
       MODE_BUT_VAL = eButtonHoldOff;
@@ -333,9 +317,14 @@ void task_IO(void *parameter)
         ESP.restart();
       }
     }
-    else if(MODE_BUT_VAL == eButtonDoubleClick){
+    else if(MODE_BUT_VAL == eButtonLongPressT1){
       MODE_BUT_VAL = eButtonHoldOff;
-      LED_RED_TOG;
+      bDeviceMode = MODE_DUAL;
+        StrCfg1.Parameter.bLastMode = bDeviceMode;
+        App_Parameter_Save(&StrCfg1);
+        /* Delay before restart */
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        ESP.restart();
     }
   }
   vTaskDelay(10 / portTICK_PERIOD_MS);
