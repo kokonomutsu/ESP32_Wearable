@@ -63,7 +63,7 @@ char fullTopic[50];
 char msg[2000];
 uint8_t bUserId = 6;
 /* Working mode */
-uint8_t bDeviceMode = MODE_DUAL;
+uint8_t bDeviceMode = MODE_BLE;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -274,7 +274,7 @@ void task_Application(void *parameter)
         }
         break;
     }
-    vTaskDelay(StrCfg1.Parameter.interval*1000 / portTICK_PERIOD_MS);
+    vTaskDelay((StrCfg1.Parameter.interval*1000) / portTICK_PERIOD_MS);
   }
 }
 
@@ -310,27 +310,35 @@ void task_IO(void *parameter)
     if(MODE_BUT_VAL == eButtonSingleClick)
     {
       MODE_BUT_VAL = eButtonHoldOff;
-      LED_GREEN_TOG;
+      /* Button single press */
+      Serial.println("[DEBUG]: Button single press!");
       if(bDeviceMode == MODE_WIFI)
       {
+        LED_GREEN_TOG;
         bDeviceMode = MODE_BLE;
         StrCfg1.Parameter.bLastMode = bDeviceMode;
         App_Parameter_Save(&StrCfg1);
+        /* Delay before restart */
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        ESP.restart();
       }
       else if(bDeviceMode == MODE_BLE)
       {
+        LED_BLUE_TOG;
         bDeviceMode = MODE_WIFI;
         StrCfg1.Parameter.bLastMode = bDeviceMode;
         App_Parameter_Save(&StrCfg1);
+        /* Delay before restart */
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        ESP.restart();
       }
     }
     else if(MODE_BUT_VAL == eButtonDoubleClick){
       MODE_BUT_VAL = eButtonHoldOff;
       LED_RED_TOG;
-
     }
-    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
+  vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
 void task_Kernel_IO(void *parameter)
@@ -369,10 +377,13 @@ void setup()
   EEPROM.begin(512);
 
   App_Parameter_Read(&StrCfg1);
-  if((StrCfg1.Parameter.DeviceID[0] == 0xFF) && (StrCfg1.Parameter.DeviceID[1] == 0xFF))
+  if(((StrCfg1.Parameter.DeviceID[0] == 0xFF) && (StrCfg1.Parameter.DeviceID[1] == 0xFF))
+      ||((StrCfg1.Parameter.bLastMode!=MODE_BLE)&&(StrCfg1.Parameter.bLastMode!=MODE_WIFI)&&(StrCfg1.Parameter.bLastMode!=MODE_DUAL)))
   {
     BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
     BLE_getMAC(StrCfg1.Parameter.DeviceID);
+    /* Default is mode BLE */
+    StrCfg1.Parameter.bLastMode = MODE_BLE;
     App_Parameter_Save(&StrCfg1);
     ESP.restart();
   }
