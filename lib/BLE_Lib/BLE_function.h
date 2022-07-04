@@ -19,8 +19,10 @@ typedef enum {
     E_ONESHOT_SPO2_ID     = 0x0C,
     E_ONESHOT_MODE_ID     = 0x0D,
     E_CONTINUOUS_MODE_ID  = 0x0E,
+    E_TEST_CONNECTION_ID  = 0x0F,
     E_PRODUCT_INFO_ID     = 0x21,
     E_RESTART_DEVICE_ID   = 0x22,
+
 } Msg_teID_Type;
 
 void BLE_getMAC(uint8_t *DeviceID);

@@ -91,6 +91,67 @@ void display_config1(double temp, int Bpm, int SPO2)
   display.display(); 
 }
 
+typedef enum {  
+    E_STATE_STARTUP_TASK,
+    E_STATE_PROCESSING_TASK,
+    E_STATE_ONESHOT_TASK,
+    E_STATE_ONESHOT_TASK_TEMP,
+    E_STATE_ONESHOT_TASK_SPO2,
+    E_STATE_CONTINUOUS_TASK,
+    E_STATE_TEST_CONNECTION_TASK,
+} eUSER_TASK_STATE;
+
+void display_state(uint8_t bStateUserTask)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(5,15);  
+  display.print("STATE:");
+  display.setCursor(1,30); 
+  switch (bStateUserTask)
+  {
+  case E_STATE_TEST_CONNECTION_TASK/* constant-expression */:
+    /* code */
+    display.print("TEST CONNECTION TASK");
+    break;
+  case E_STATE_STARTUP_TASK/* constant-expression */:
+    /* code */
+    display.print("START UP TASK");
+    break;
+  case E_STATE_ONESHOT_TASK_TEMP/* constant-expression */:
+    /* code */
+    display.print("MEASURE TEMP TASK");
+    break;
+  case E_STATE_ONESHOT_TASK_SPO2/* constant-expression */:
+    /* code */
+    display.print("MEASURE SPO2 TASK");
+    break;
+  default:
+    break;
+  }
+  display.display(); 
+}
+
+void display_server_connect_state(bool bConnectServerStatus)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(1);
+  display.setCursor(5,15);  
+  display.print("Connect server:");
+  display.setCursor(1,30); 
+  if(bConnectServerStatus == true)
+  {
+    display.print("SUCCESS!");
+  }
+  else
+  {
+    display.print("FAILED!");
+  }
+  display.display(); 
+}
+
 void display_config2(double temp)
 {
   display.clearDisplay();

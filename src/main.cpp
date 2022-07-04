@@ -152,6 +152,8 @@ void task_Application(void *parameter)
         {
           //read work mode
           Serial.println("[DEBUG]: STARTUP TASK!");
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_config(sensor_getTemp());
           bFlag_1st_TaskState = false;
         }
@@ -166,6 +168,8 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: ONESHOT TASK!");
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
           bFlag_1st_TaskState = false;
         }
@@ -174,7 +178,6 @@ void task_Application(void *parameter)
             startFlag = false;
             MaxSPO2 = 0;
             MaxHearbeat = 0;
-
             eUserTask_State = E_STATE_PROCESSING_TASK;
             bFlag_1st_TaskState = true;
           }
@@ -188,8 +191,10 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: ONESHOT TASK TEMPERATURE!");
-          bSingleTempShot = 0;
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_single_temp_shot(bSingleTempShot);
+          bSingleTempShot = 0;
           bFlag_1st_TaskState = false;
         }
         else{
@@ -210,6 +215,8 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: ONESHOT TASK SP02!");
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_single_spo2_shot(0,0);
           bFlag_1st_TaskState = false;
           startFlag = true;
@@ -218,6 +225,7 @@ void task_Application(void *parameter)
           sersor_reset_data_Value();
           MaxSPO2 = 0;
           MaxHearbeat = 0;
+          
         }
         else{
           if(sensor_processing(MaxSPO2, MaxHearbeat))
@@ -246,6 +254,8 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: PROCESING TASK!");
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_config2(sensor_getTemp());
           bFlag_1st_TaskState = false;
         }
@@ -265,6 +275,8 @@ void task_Application(void *parameter)
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: CONTINOUS TASK!");
+          display_state(eUserTask_State);
+          vTaskDelay(1000);
           display_config1(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
           bFlag_1st_TaskState = false;
         }
@@ -273,6 +285,33 @@ void task_Application(void *parameter)
           App_mqtt_SendSensor(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
         }
         break;
+      case E_STATE_TEST_CONNECTION_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          Serial.println("[DEBUG]: TEST CONNECTION TASK!");
+          display_state(eUserTask_State);
+          bFlag_1st_TaskState = false;
+          /* Connect server */
+          wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
+          vTaskDelay(5000);
+        }
+        else{
+          if(wifi_mqtt_isConnected())
+          {
+            display_server_connect_state(true);
+            /* Feedback to BLE */
+            eUserTask_State = E_STATE_STARTUP_TASK;
+            bFlag_1st_TaskState = true;
+          }
+          else
+          {
+            display_server_connect_state(false);
+            /* Feedback to BLE */
+            eUserTask_State = E_STATE_STARTUP_TASK;
+            bFlag_1st_TaskState = true;
+          }
+        }
+      break;
     }
     vTaskDelay((StrCfg1.Parameter.interval*1000) / portTICK_PERIOD_MS);
   }
@@ -290,7 +329,7 @@ void task_IO(void *parameter)
         display_config2(sensor_getTemp());
       }
     }
-    
+
     if(MODE_BUT_VAL == eButtonSingleClick)
     {
       MODE_BUT_VAL = eButtonHoldOff;
@@ -320,11 +359,14 @@ void task_IO(void *parameter)
     else if(MODE_BUT_VAL == eButtonLongPressT1){
       MODE_BUT_VAL = eButtonHoldOff;
       bDeviceMode = MODE_DUAL;
-        StrCfg1.Parameter.bLastMode = bDeviceMode;
-        App_Parameter_Save(&StrCfg1);
-        /* Delay before restart */
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        ESP.restart();
+      StrCfg1.Parameter.bLastMode = bDeviceMode;
+      memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));
+      memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
+      memset(StrCfg1.Parameter.ServerURL,0,sizeof(StrCfg1.Parameter.ServerURL));
+      App_Parameter_Save(&StrCfg1);
+      /* Delay before restart */
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      ESP.restart();
     }
   }
   vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -380,13 +422,14 @@ void setup()
   bDeviceMode = StrCfg1.Parameter.bLastMode;
   
   /* Test default wifi */
-  memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
-  memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
+  //memcpy(&StrCfg1.Parameter.WifiSSID,"KOKONO",sizeof("KOKONO"));
+  //memcpy(&StrCfg1.Parameter.WifiPASS, "kokono26988", sizeof("kokono26988"));
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
-  memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
+  //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
+  /* Make Full device */
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
@@ -438,7 +481,7 @@ void setup()
   {
     BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
   }
-  if((bDeviceMode == MODE_WIFI)||(bDeviceMode == MODE_DUAL))
+  if(bDeviceMode == MODE_WIFI)
   {
     delay(1000);
     wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
@@ -458,7 +501,7 @@ void loop() {
   static bool bFlagGetJWT = true;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
-  if((bDeviceMode == MODE_WIFI)||(bDeviceMode == MODE_DUAL))
+  if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
   {
     wifi_loop(fullDeviceID);
     if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
@@ -490,8 +533,20 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<SSID_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiSSID);
+        App_Parameter_Save(&StrCfg1);
       }
       break;
+    case E_TEST_CONNECTION_ID:
+      LED_GREEN_TOG;
+      LED_RED_TOG;
+      /* Start connect wifi and server */
+      if(eUserTask_State != E_STATE_TEST_CONNECTION_TASK)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
+      }
+      break;
+    break;
     case E_PASS_CFG_ID:
       if((MsgLength - 8) <= PASS_MAX_SIZE)
       {
@@ -501,6 +556,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<PASS_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiPASS[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiPASS);
+        App_Parameter_Save(&StrCfg1);
       }
       break;
     case E_INTERVAL_CFG_ID:
@@ -543,6 +599,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<URL_MAX_SIZE;j++)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
         Serial.println(StrCfg1.Parameter.ServerURL);
+        App_Parameter_Save(&StrCfg1);
       }
       break;
     case E_DEVICE_DATA_ID:
