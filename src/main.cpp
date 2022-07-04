@@ -442,7 +442,7 @@ void setup()
 
   /* Device setup */
   sensor_Setup();
-  display_Setup();
+  display_Setup(bDeviceMode);
   Serial.println("[DEBUG]: BLE INIT!");
   /* Check device mode */
   if((bDeviceMode == MODE_BLE)||(bDeviceMode == MODE_DUAL))

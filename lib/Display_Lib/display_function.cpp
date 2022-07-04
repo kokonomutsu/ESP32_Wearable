@@ -12,7 +12,11 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-void display_Setup(void)
+#define MODE_BLE  1
+#define MODE_WIFI 2
+#define MODE_DUAL 3
+
+void display_Setup(uint8_t bMODE)
 {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
 
@@ -21,9 +25,23 @@ void display_Setup(void)
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.println("FPT Wearable");
-  display.setCursor(25,35);
+  display.setCursor(25,30);
   display.setTextSize(1);
   display.print("Starting...!");
+  display.setCursor(25,45);
+  display.setTextSize(1);
+  if(bMODE == MODE_BLE)
+  {
+    display.print("MODE BLE!");
+  }
+  else if(bMODE == MODE_WIFI)
+  {
+    display.print("MODE WIFI!");
+  }
+  else if(bMODE == MODE_DUAL)
+  {
+    display.print("MODE DUAL!");
+  }
   display.display();
 }
 
