@@ -17,7 +17,7 @@ typedef enum {
     E_PRIVATE_KEY_ID      = 0x0A,
     E_ONESHOT_TEMP_ID     = 0x0B,
     E_ONESHOT_SPO2_ID     = 0x0C,
-    E_ONESHOT_MODE_ID     = 0x0D,
+    E_STOP_MEASURE_ID     = 0x0D,
     E_CONTINUOUS_MODE_ID  = 0x0E,
     E_TEST_CONNECTION_ID  = 0x0F,
     E_PRODUCT_INFO_ID     = 0x21,

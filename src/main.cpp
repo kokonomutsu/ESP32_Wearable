@@ -643,13 +643,8 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
-    case E_ONESHOT_MODE_ID:
-      LED_GREEN_TOG;
-      if(eUserTask_State != E_STATE_ONESHOT_TASK)
-      {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK;
-      }
+    case E_STOP_MEASURE_ID:
+      
       break;
     case E_CONTINUOUS_MODE_ID:
       LED_GREEN_TOG;
