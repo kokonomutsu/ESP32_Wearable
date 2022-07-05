@@ -21,6 +21,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
 bool App_BLE_SendTemp(double temp);
 bool App_BLE_SendSensor(int SPO2, int HeartRate);
 bool App_BLE_SendTestConnection(bool bConnectionStatus);
+bool App_BLE_SendACK(Msg_teID_Type bBLEID);
 
 void App_mqtt_callback(char* topic, byte* message, unsigned int length);
 bool App_mqtt_SendTemp(double temp);
@@ -555,6 +556,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiSSID);
         App_Parameter_Save(&StrCfg1);
+        App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     case E_TEST_CONNECTION_ID:
@@ -578,6 +580,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiPASS[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiPASS);
         App_Parameter_Save(&StrCfg1);
+        App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     case E_INTERVAL_CFG_ID:
@@ -589,6 +592,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         }
         StrCfg1.Parameter.interval = temp;
         App_Parameter_Save(&StrCfg1);
+        App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     }
@@ -621,6 +625,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
         Serial.println(StrCfg1.Parameter.ServerURL);
         App_Parameter_Save(&StrCfg1);
+        App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     case E_DEVICE_DATA_ID:
@@ -635,6 +640,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<URL_MAX_SIZE;j++)
           StrCfg1.Parameter.PrivateKey[j] = 0x00;
         Serial.println(StrCfg1.Parameter.PrivateKey);
+        App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     case E_ONESHOT_MODE_ID:
@@ -670,6 +676,16 @@ bool App_BLE_SendTemp(double temp)
     uint8_t tempMsg[5] = {(uint8_t)(value/1000 + 48), (uint8_t)((value%1000)/100 + 48), (uint8_t)((value%100)/10 + 48), '.', (uint8_t)(value%10 + 48)};
     BLE_configMsg(13, 0, E_TEMP_DATA_ID, SeqID++, 1, tempMsg);
     return true;
+  }
+  return false;
+}
+
+bool App_BLE_SendACK(Msg_teID_Type bBLEID)
+{
+  if(BLE_isConnected())
+  {
+      BLE_configMsg(9, 0, bBLEID, SeqID++, 1, (uint8_t*)"1");
+      return true;
   }
   return false;
 }
