@@ -295,6 +295,7 @@ void task_Application(void *parameter)
           display_state(eUserTask_State);
           bFlag_1st_TaskState = false;
           /* Connect server */
+          wifi_disconnect();
           wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
           /* Reset timeout */
           bTestConnectionTimeOut = 0;
@@ -318,11 +319,26 @@ void task_Application(void *parameter)
             }
             else
             {
-              display_server_connect_state(2);
-              /* Feedback to BLE */
-              App_BLE_SendTestConnection(2);
-              vTaskDelay(1000);
-              LED_GREEN_TOG;
+              if(bTestConnectionTimeOut++<=20)//20s
+              {
+                display_server_connect_state(2);
+                /* Feedback to BLE */
+                App_BLE_SendTestConnection(2);
+                vTaskDelay(1000);
+                LED_GREEN_TOG;
+              }
+              else
+              {
+                bDeviceMode = MODE_WIFI;
+                StrCfg1.Parameter.bLastMode = bDeviceMode;
+                App_Parameter_Save(&StrCfg1);
+                /* Feedback to BLE */
+                App_BLE_SendTestConnection(1);
+                vTaskDelay(1000);
+                eUserTask_State = E_STATE_STARTUP_TASK;
+                bFlag_1st_TaskState = true;
+                LED_GREEN_TOG;
+              }
             }
           }
           /* Wifi cannot connect */
@@ -334,6 +350,7 @@ void task_Application(void *parameter)
               App_BLE_SendTestConnection(0);
               vTaskDelay(1000);
               LED_RED_TOG;
+              Serial.print(".");
             }
             else
             {
@@ -578,11 +595,11 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       LED_GREEN_TOG;
       LED_RED_TOG;
       /* Start connect wifi and server */
-      if(eUserTask_State != E_STATE_TEST_CONNECTION_TASK)
-      {
+      //if(eUserTask_State != E_STATE_TEST_CONNECTION_TASK)
+      //{
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
-      }
+      //}
       break;
     break;
     case E_PASS_CFG_ID:
