@@ -43,9 +43,9 @@ bool wifi_connect(char* ssid, char* password)
     return true;
 }
 
-bool wifi_setup_mqtt(void (*callback)(char* topic, uint8_t* message, unsigned int length), char* ssid, char* password, char* mqtt_server, uint16_t port)
+bool wifi_setup_mqtt(void (*callback)(char* topic, uint8_t* message, unsigned int length), char* mqtt_server, uint16_t port)
 {
-    if(wifi_connect(ssid, password))
+    if(WiFi.status() == WL_CONNECTED)
     {
         client.setServer(mqtt_server, port);
         client.setCallback(callback);

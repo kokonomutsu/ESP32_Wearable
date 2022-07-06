@@ -32,6 +32,8 @@ bool App_mqtt_SendStatus(uint8_t ErrorStt, uint8_t TempStt, uint8_t Spo2Stt);
 void App_Parameter_Read(StrConfigPara *StrCfg);
 void App_Parameter_Save(StrConfigPara *StrCfg);
 
+bool vWifiTask(void);
+
 /****************************************************************************/
 /***        Exported Variables                                            ***/
 /****************************************************************************/
@@ -165,16 +167,16 @@ void task_Application(void *parameter)
           /* STARTUP-IDLE just measure, not send BLE data */
           //App_BLE_SendTemp(sensor_getTemp());
           /* Ping server */
-        #ifdef PING_TEST_MODE
-          static uint8_t bCountPing;
-          if(bCountPing++>20)
-          {
-            vTaskDelay(100);
-            /* One shot measure temp to ping server */
-            bFlag_1st_TaskState = true;
-            eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
-          }
-        #endif /**/
+          #ifdef PING_TEST_MODE
+            static uint8_t bCountPing;
+            if((bCountPing++>20)&&(wifi_mqtt_isConnected()==true))
+            {
+              vTaskDelay(100);
+              /* One shot measure temp to ping server */
+              bFlag_1st_TaskState = true;
+              eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+            }
+          #endif /**/
         }
         break;
       case E_STATE_ONESHOT_TASK:
@@ -307,7 +309,6 @@ void task_Application(void *parameter)
           bFlag_1st_TaskState = false;
           /* Connect server */
           wifi_disconnect();
-          wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
           /* Reset timeout */
           bTestConnectionTimeOut = 0;
         }
@@ -491,7 +492,7 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
-  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
+  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
   //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   /* Make Full device */
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
@@ -540,16 +541,11 @@ void setup()
   /* Device setup */
   sensor_Setup();
   display_Setup(bDeviceMode);
-  Serial.println("[DEBUG]: BLE INIT!");
   /* Check device mode */
   if((bDeviceMode == MODE_BLE)||(bDeviceMode == MODE_DUAL))
   {
+    Serial.println("[DEBUG]: BLE INIT!");
     BLE_Init(StrCfg1.Parameter.DeviceID, auBLETxBuffer, sizeof(auBLETxBuffer), auBLERxBuffer, sizeof(auBLERxBuffer));
-  }
-  if(bDeviceMode == MODE_WIFI)
-  {
-    delay(1000);
-    wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
   }
   
   /* Create task */
@@ -562,25 +558,64 @@ void setup()
   xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
 }
 
+bool vWifiTask(void)
+{
+   static bool bFlagGetJWT = true;
+    /* Wifi task */
+    static bool bFlag1stWifiConnect = true;
+    static bool bFlag1stServerConnect = true;
+    static bool bReturn = false;
+    /* Check flag to conenct wifi */
+    if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
+    {
+      if(bFlag1stWifiConnect==true)
+      {
+        if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
+        {
+          /* Connect wifi */
+          wifi_connect(StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS);
+          bFlag1stWifiConnect = false;
+        }
+      }
+      else
+      {
+        /* Check Wifi connect status */
+        if(bFlag1stServerConnect==true)
+        {
+          bFlag1stServerConnect = false;
+          if(wifi_connect_status() == true)
+          {
+              wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.ServerURL, 1883);
+              bReturn = true;
+          }
+          else
+          {
+              Serial.print(".");
+              vTaskDelay(500);
+              bReturn = false;
+          }
+        }
+        else
+        {
+          /* Wifi loop */
+          wifi_loop(fullDeviceID);
+          if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
+          {
+            bFlagGetJWT = false;
+            /* Try get JWT */
+            Serial.println(getJwt().c_str());
+          }
+        }
+      }
+    }
+    return bReturn;
+}
+
 void loop() {
-  static bool bFlagGetJWT = true;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
   /* Wifi task */
-  if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
-  {
-    wifi_loop(fullDeviceID);
-    if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
-    {
-      bFlagGetJWT = false;
-      /* Try get JWT */
-      Serial.println(getJwt().c_str());
-    }
-  }
-  /*if(wifi_mqtt_isConnected()==false)
-  {
-    bFlagGetJWT = false;
-  }*/
+  vWifiTask();
 }
 
 /****************************************************************************/
