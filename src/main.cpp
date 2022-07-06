@@ -582,10 +582,10 @@ bool vWifiTask(void)
         /* Check Wifi connect status */
         if(bFlag1stServerConnect==true)
         {
-          bFlag1stServerConnect = false;
           if(wifi_connect_status() == true)
           {
               wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.ServerURL, 1883);
+              bFlag1stServerConnect = false;
               bReturn = true;
           }
           else
