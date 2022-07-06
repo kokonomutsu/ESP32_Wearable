@@ -308,7 +308,10 @@ void task_Application(void *parameter)
           display_state(eUserTask_State);
           bFlag_1st_TaskState = false;
           /* Connect server */
-          wifi_disconnect();
+          if(wifi_connect_status()==true)
+          {
+            wifi_disconnect();
+          }
           /* Reset timeout */
           bTestConnectionTimeOut = 0;
         }
@@ -326,7 +329,7 @@ void task_Application(void *parameter)
               App_Parameter_Save(&StrCfg1);
               /* Feedback to BLE */
               App_BLE_SendTestConnection(1);
-              vTaskDelay(1000);
+              vTaskDelay(2000);
               //ESP.restart();
             }
             else
@@ -336,7 +339,7 @@ void task_Application(void *parameter)
                 display_server_connect_state(2);
                 /* Feedback to BLE */
                 App_BLE_SendTestConnection(2);
-                vTaskDelay(1000);
+                vTaskDelay(2000);
                 LED_GREEN_TOG;
               }
               else
@@ -346,7 +349,7 @@ void task_Application(void *parameter)
                 App_Parameter_Save(&StrCfg1);
                 /* Feedback to BLE */
                 App_BLE_SendTestConnection(1);
-                vTaskDelay(1000);
+                vTaskDelay(2000);
                 eUserTask_State = E_STATE_STARTUP_TASK;
                 bFlag_1st_TaskState = true;
                 LED_GREEN_TOG;
@@ -360,7 +363,7 @@ void task_Application(void *parameter)
             {
               display_server_connect_state(0);
               App_BLE_SendTestConnection(0);
-              vTaskDelay(1000);
+              vTaskDelay(2000);
               LED_RED_TOG;
               Serial.print(".");
             }
