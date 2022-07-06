@@ -76,6 +76,24 @@ bool wifi_loop(char* fullDeviceID)
     return false;
 }
 
+bool wifi_connect_status(void)
+{
+    if(WiFi.status() == WL_CONNECTED)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool server_connect_status(void)
+{
+    if(client.connected())
+    {
+        return true;
+    }
+    return false;
+}
+
 bool wifi_mqtt_isConnected(void)
 {
     if(WiFi.status() == WL_CONNECTED)

@@ -20,7 +20,7 @@
 void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data);
 bool App_BLE_SendTemp(double temp);
 bool App_BLE_SendSensor(int SPO2, int HeartRate);
-bool App_BLE_SendTestConnection(bool bConnectionStatus);
+bool App_BLE_SendTestConnection(uint8_t bConnectionStatus);
 bool App_BLE_SendACK(Msg_teID_Type bBLEID);
 
 void App_mqtt_callback(char* topic, byte* message, unsigned int length);
@@ -288,6 +288,7 @@ void task_Application(void *parameter)
         }
         break;
       case E_STATE_TEST_CONNECTION_TASK:
+        static uint32_t bTestConnectionTimeOut = 0;
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: TEST CONNECTION TASK!");
@@ -295,41 +296,54 @@ void task_Application(void *parameter)
           bFlag_1st_TaskState = false;
           /* Connect server */
           wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS, StrCfg1.Parameter.ServerURL, 1883);
+          /* Reset timeout */
+          bTestConnectionTimeOut = 0;
         }
         else{
-          static uint32_t bTestConnectionTimeOut = 0;
-          if(wifi_mqtt_isConnected())
+          if(wifi_connect_status()==true)
           {
-            display_server_connect_state(true);
-            eUserTask_State = E_STATE_STARTUP_TASK;
-            bFlag_1st_TaskState = true;
-            LED_BLUE_TOG;
-            bDeviceMode = MODE_WIFI;
-            StrCfg1.Parameter.bLastMode = bDeviceMode;
-            App_Parameter_Save(&StrCfg1);
-            /* Feedback to BLE */
-            App_BLE_SendTestConnection(true);
-            vTaskDelay(1000);
-            //ESP.restart();
-          }
-          else
-          {
-            if(bTestConnectionTimeOut++<=10)//10s
+            if(wifi_mqtt_isConnected())
             {
-              vTaskDelay(1000);
-            }
-            else
-            {
-              display_server_connect_state(false);
-              /* Feedback to BLE */
+              display_server_connect_state(1);
               eUserTask_State = E_STATE_STARTUP_TASK;
               bFlag_1st_TaskState = true;
-              LED_RED_TOG;
+              LED_BLUE_TOG;
               bDeviceMode = MODE_WIFI;
               StrCfg1.Parameter.bLastMode = bDeviceMode;
               App_Parameter_Save(&StrCfg1);
               /* Feedback to BLE */
-              App_BLE_SendTestConnection(false);
+              App_BLE_SendTestConnection(1);
+              vTaskDelay(1000);
+              //ESP.restart();
+            }
+            else
+            {
+              display_server_connect_state(2);
+              /* Feedback to BLE */
+              App_BLE_SendTestConnection(2);
+              vTaskDelay(1000);
+              LED_GREEN_TOG;
+            }
+          }
+          /* Wifi cannot connect */
+          else
+          {
+            if(bTestConnectionTimeOut++<=20)//20s
+            {
+              display_server_connect_state(0);
+              App_BLE_SendTestConnection(0);
+              vTaskDelay(1000);
+              LED_RED_TOG;
+            }
+            else
+            {
+              display_server_connect_state(0);
+              /* Feedback to BLE */
+              eUserTask_State = E_STATE_STARTUP_TASK;
+              bFlag_1st_TaskState = true;
+              LED_RED_TOG;
+              /* Feedback to BLE */
+              App_BLE_SendTestConnection(0);
             }
           }
         }
@@ -456,6 +470,7 @@ void setup()
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
                                                 StrCfg1.Parameter.DeviceID[3]);
+  //sprintf(fullDeviceID, "FPT_FCCIoT_%s", "09DE");//device Tai
 
   /* Serial json */
   /*MQTT_JsonDoc["owner"]   = typeOwneriot;
@@ -685,17 +700,21 @@ bool App_BLE_SendACK(Msg_teID_Type bBLEID)
   return false;
 }
 
-bool App_BLE_SendTestConnection(bool bConnectionStatus)
+bool App_BLE_SendTestConnection(uint8_t bConnectionStatus)
 {
   if(BLE_isConnected())
   {
-    if(bConnectionStatus==true)
+    if(bConnectionStatus==1)
     {
       BLE_configMsg(9, 0, E_TEST_CONNECTION_ID, SeqID++, 1, (uint8_t*)"1");
     }
-    else
+    else if(bConnectionStatus==0)
     {
       BLE_configMsg(9, 0, E_TEST_CONNECTION_ID, SeqID++, 1, (uint8_t*)"0");
+    }
+    else if(bConnectionStatus==2)
+    {
+      BLE_configMsg(9, 0, E_TEST_CONNECTION_ID, SeqID++, 1, (uint8_t*)"2");
     }
     return true;
   }

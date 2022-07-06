@@ -17,6 +17,6 @@ void display_single_spo2_shot(int Bpm, int SPO2);
 
 void display_state(uint8_t bStateUserTask);
 
-void display_server_connect_state(bool bConnectServerStatus);
+void display_server_connect_state(uint8_t bConnectServerStatus);
 
 #endif

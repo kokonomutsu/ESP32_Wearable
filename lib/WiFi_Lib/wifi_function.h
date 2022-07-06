@@ -21,4 +21,8 @@ int wifi_ntp_getMonths(void);
 
 int wifi_ntp_getDays(void);
 
+bool wifi_connect_status(void);
+
+bool server_connect_status(void);
+
 #endif

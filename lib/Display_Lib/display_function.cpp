@@ -134,7 +134,7 @@ void display_state(uint8_t bStateUserTask)
   display.display(); 
 }
 
-void display_server_connect_state(bool bConnectServerStatus)
+void display_server_connect_state(uint8_t bConnectServerStatus)
 {
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -142,13 +142,17 @@ void display_server_connect_state(bool bConnectServerStatus)
   display.setCursor(5,15);  
   display.print("Connect server:");
   display.setCursor(1,30); 
-  if(bConnectServerStatus == true)
+  if(bConnectServerStatus == 1)
   {
-    display.print("SUCCESS!");
+    display.print("SERVER SUCCESS!");
   }
-  else
+  else if(bConnectServerStatus == 2)
   {
-    display.print("FAILED!");
+    display.print("WIFI OK!");
+  }
+  else if(bConnectServerStatus == 0)
+  {
+    display.print("WIFI FAILED!");
   }
   display.display(); 
 }
