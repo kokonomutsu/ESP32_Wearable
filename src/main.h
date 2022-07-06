@@ -44,4 +44,7 @@ typedef union Struct_Flash_Config_Parameter
     unsigned char paraBuffer[sizeof(Parameter)];
 }StrConfigPara;
 
+
+#define PING_TEST_MODE
+
 #endif

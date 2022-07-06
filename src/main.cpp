@@ -164,6 +164,17 @@ void task_Application(void *parameter)
           display_config(sensor_getTemp());
           /* STARTUP-IDLE just measure, not send BLE data */
           //App_BLE_SendTemp(sensor_getTemp());
+          /* Ping server */
+        #ifdef PING_TEST_MODE
+          static uint8_t bCountPing;
+          if(bCountPing++>20)
+          {
+            vTaskDelay(100);
+            /* One shot measure temp to ping server */
+            bFlag_1st_TaskState = true;
+            eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+          }
+        #endif /**/
         }
         break;
       case E_STATE_ONESHOT_TASK:
@@ -555,6 +566,7 @@ void loop() {
   static bool bFlagGetJWT = true;
   // put your main code here, to run repeatedly:
   sensor_updateValue();
+  /* Wifi task */
   if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
   {
     wifi_loop(fullDeviceID);
