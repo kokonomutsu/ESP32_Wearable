@@ -45,6 +45,6 @@ typedef union Struct_Flash_Config_Parameter
 }StrConfigPara;
 
 
-#define PING_TEST_MODE
+//#define PING_TEST_MODE
 
 #endif

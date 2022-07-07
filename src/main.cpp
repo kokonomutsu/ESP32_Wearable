@@ -66,6 +66,7 @@ char strTime[30];
 char fullTopic[50];
 char msg[2000];
 uint8_t bUserId = 6;
+bool bFlagTestConnectionStart = false;
 /* Working mode */
 uint8_t bDeviceMode = MODE_BLE;
 
@@ -314,6 +315,7 @@ void task_Application(void *parameter)
           }
           /* Reset timeout */
           bTestConnectionTimeOut = 0;
+          bFlagTestConnectionStart = true;
         }
         else{
           if(wifi_connect_status()==true)
@@ -323,6 +325,7 @@ void task_Application(void *parameter)
               display_server_connect_state(1);
               eUserTask_State = E_STATE_STARTUP_TASK;
               bFlag_1st_TaskState = true;
+              bFlagTestConnectionStart = false;
               LED_BLUE_TOG;
               bDeviceMode = MODE_WIFI;
               StrCfg1.Parameter.bLastMode = bDeviceMode;
@@ -352,6 +355,7 @@ void task_Application(void *parameter)
                 vTaskDelay(2000);
                 eUserTask_State = E_STATE_STARTUP_TASK;
                 bFlag_1st_TaskState = true;
+                bFlagTestConnectionStart = false;
                 LED_GREEN_TOG;
               }
             }
@@ -373,6 +377,7 @@ void task_Application(void *parameter)
               /* Feedback to BLE */
               eUserTask_State = E_STATE_STARTUP_TASK;
               bFlag_1st_TaskState = true;
+              bFlagTestConnectionStart = false;
               LED_RED_TOG;
               /* Feedback to BLE */
               App_BLE_SendTestConnection(0);
@@ -495,7 +500,7 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
+  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
   //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   /* Make Full device */
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
@@ -569,16 +574,13 @@ bool vWifiTask(void)
     static bool bFlag1stServerConnect = true;
     static bool bReturn = false;
     /* Check flag to conenct wifi */
-    if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
+    if((bDeviceMode == MODE_WIFI)||(bFlagTestConnectionStart == true))
     {
       if(bFlag1stWifiConnect==true)
       {
-        if((bDeviceMode == MODE_WIFI)||(eUserTask_State == E_STATE_TEST_CONNECTION_TASK))
-        {
-          /* Connect wifi */
-          wifi_connect(StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS);
-          bFlag1stWifiConnect = false;
-        }
+        /* Connect wifi */
+        wifi_connect(StrCfg1.Parameter.WifiSSID, StrCfg1.Parameter.WifiPASS);
+        bFlag1stWifiConnect = false;
       }
       else
       {
