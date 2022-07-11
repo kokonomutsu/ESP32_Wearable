@@ -347,9 +347,6 @@ void task_Application(void *parameter)
               }
               else
               {
-                bDeviceMode = MODE_WIFI;
-                StrCfg1.Parameter.bLastMode = bDeviceMode;
-                App_Parameter_Save(&StrCfg1);
                 /* Feedback to BLE */
                 App_BLE_SendTestConnection(1);
                 vTaskDelay(2000);
@@ -647,11 +644,11 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       LED_GREEN_TOG;
       LED_RED_TOG;
       /* Start connect wifi and server */
-      //if(eUserTask_State != E_STATE_TEST_CONNECTION_TASK)
-      //{
+      if(eUserTask_State != E_STATE_TEST_CONNECTION_TASK)
+      {
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
-      //}
+      }
       break;
     break;
     case E_PASS_CFG_ID:

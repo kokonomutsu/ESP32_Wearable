@@ -19,7 +19,7 @@
 //const char *password = "PASSWORD";
 
 // Cloud iot details.
-const char *project_id = "project-id";
+const char *project_id = "fpt-demo-testing-jwt";
 const char *location = "us-central1";
 const char *registry_id = "my-registry";
 const char *device_id = "my-esp32-device";
@@ -41,9 +41,9 @@ const char* ntp_secondary = "time.nist.gov";
 // it's smaller add "00:" to the start. If it's too big or too small something
 // is probably wrong with your key.
 const char *private_key_str =
-    "6e:b8:17:35:c7:fc:6b:d7:a9:cb:cb:49:7f:a0:67:"
-    "63:38:b0:90:57:57:e0:c0:9a:e8:6f:06:0c:d9:ee:"
-    "31:41";
+    "b2:88:7b:0c:38:83:b4:31:b4:e3:b1:6e:ad:71:aa:"
+    "58:d4:ff:63:69:82:9d:4a:f9:63:0c:4b:6c:b7:9a:"
+    "b6:e9";
 
 // Time (seconds) to expire token += 20 minutes for drift
 const int jwt_exp_secs = 60*20; // Maximum 24H (3600*24)

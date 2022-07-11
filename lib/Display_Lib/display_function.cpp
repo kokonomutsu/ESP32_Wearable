@@ -148,11 +148,11 @@ void display_server_connect_state(uint8_t bConnectServerStatus)
   }
   else if(bConnectServerStatus == 2)
   {
-    display.print("WIFI OK!");
+    display.print("WIFI SUCCESS!");
   }
   else if(bConnectServerStatus == 0)
   {
-    display.print("WIFI FAILED!");
+    display.print("WIFI CONNECTING...");
   }
   display.display(); 
 }
