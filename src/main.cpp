@@ -428,7 +428,7 @@ void task_IO(void *parameter)
     }
     else if(MODE_BUT_VAL == eButtonLongPressT1){
       MODE_BUT_VAL = eButtonHoldOff;
-      bDeviceMode = MODE_DUAL;
+      bDeviceMode = MODE_BLE;
       StrCfg1.Parameter.bLastMode = bDeviceMode;
       memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));
       memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
@@ -504,7 +504,8 @@ void setup()
                                                 StrCfg1.Parameter.DeviceID[1],
                                                 StrCfg1.Parameter.DeviceID[2],
                                                 StrCfg1.Parameter.DeviceID[3]);
-  //sprintf(fullDeviceID, "FPT_FCCIoT_%s", "09DE");//device Tai
+//  sprintf(fullDeviceID, "FPT_FCCIoT_%s", "09DE");//device Tai
+//  sprintf(fullDeviceID, "FPT_FCCIoT_%s", "0A22");//device Khai
 
   /* Serial json */
   /*MQTT_JsonDoc["owner"]   = typeOwneriot;
@@ -628,6 +629,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
   switch (MsgID)
   {
     case E_SSID_CFG_ID:
+      memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));
       if((MsgLength - 8) <= SSID_MAX_SIZE)
       {
         int i;
@@ -652,6 +654,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       break;
     break;
     case E_PASS_CFG_ID:
+      memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
       if((MsgLength - 8) <= PASS_MAX_SIZE)
       {
         int i;
@@ -697,6 +700,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       }
       break;
     case E_URL_CFG_ID:
+      memset(StrCfg1.Parameter.ServerURL,0,sizeof(StrCfg1.Parameter.ServerURL));
       if((MsgLength - 8) <= URL_MAX_SIZE)
       {
         int i;

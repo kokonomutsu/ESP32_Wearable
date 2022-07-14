@@ -40,10 +40,14 @@ const char* ntp_secondary = "time.nist.gov";
 // of hex digits). If it's bigger and it starts with "00:" delete the "00:". If
 // it's smaller add "00:" to the start. If it's too big or too small something
 // is probably wrong with your key.
+// const char *private_key_str =
+//     "b2:88:7b:0c:38:83:b4:31:b4:e3:b1:6e:ad:71:aa:"
+//     "58:d4:ff:63:69:82:9d:4a:f9:63:0c:4b:6c:b7:9a:"
+//     "b6:e9";
 const char *private_key_str =
-    "b2:88:7b:0c:38:83:b4:31:b4:e3:b1:6e:ad:71:aa:"
-    "58:d4:ff:63:69:82:9d:4a:f9:63:0c:4b:6c:b7:9a:"
-    "b6:e9";
+    "79:88:65:51:02:14:92:43:73:f7:a4:51:13:4d:40:"
+    "66:61:77:b2:76:ba:41:18:86:f1:43:b1:a4:db:df:"
+    "06:72";
 
 // Time (seconds) to expire token += 20 minutes for drift
 const int jwt_exp_secs = 60*20; // Maximum 24H (3600*24)
