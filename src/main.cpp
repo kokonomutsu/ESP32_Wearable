@@ -629,7 +629,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
   switch (MsgID)
   {
     case E_SSID_CFG_ID:
-      memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));
+      memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
       if((MsgLength - 8) <= SSID_MAX_SIZE)
       {
         int i;
@@ -654,7 +654,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       break;
     break;
     case E_PASS_CFG_ID:
-      memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
+      memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));
       if((MsgLength - 8) <= PASS_MAX_SIZE)
       {
         int i;
