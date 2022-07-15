@@ -69,6 +69,9 @@ uint8_t bUserId = 6;
 bool bFlagTestConnectionStart = false;
 /* Working mode */
 uint8_t bDeviceMode = MODE_BLE;
+/* Wifi task */
+static bool bFlag1stWifiConnect = true;
+static bool bFlag1stServerConnect = true;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -188,6 +191,7 @@ void task_Application(void *parameter)
         {
           Serial.println("[DEBUG]: CANCEL CONNECTION TASK!");
           bFlag_1st_TaskState = false;
+          display_state(eUserTask_State);
           /* Cancel wifi */
           bFlagTestConnectionStart = false;
           wifi_cancel_connect();
@@ -350,6 +354,8 @@ void task_Application(void *parameter)
           /* Reset timeout */
           bTestConnectionTimeOut = 0;
           bFlagTestConnectionStart = true;
+          bFlag1stWifiConnect = true;
+          bFlag1stServerConnect = true;
         }
         else{
           if(wifi_connect_status()==true)
@@ -428,10 +434,14 @@ void task_IO(void *parameter)
     {
       START_BUT_VAL = eButtonHoldOff;
       LED_BLUE_TOG;
-      if(eUserTask_State == E_STATE_ONESHOT_TASK){
-        startFlag = true;
-        display_config2(sensor_getTemp());
+      if(eUserTask_State == E_STATE_STARTUP_TASK){
+        eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
+        bFlag_1st_TaskState = true;
       }
+      /*else if(eUserTask_State == E_STATE_TEST_CONNECTION_TASK){
+        eUserTask_State = E_STATE_CANCEL_CONNECTION_TASK;
+        bFlag_1st_TaskState = true;
+      }*/
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -599,10 +609,7 @@ void setup()
 
 bool vWifiTask(void)
 {
-   static bool bFlagGetJWT = true;
-    /* Wifi task */
-    static bool bFlag1stWifiConnect = true;
-    static bool bFlag1stServerConnect = true;
+    static bool bFlagGetJWT = true;
     static bool bReturn = false;
     /* Check flag to conenct wifi */
     if((bDeviceMode == MODE_WIFI)||(bFlagTestConnectionStart == true))

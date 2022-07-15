@@ -77,9 +77,12 @@ bool wifi_loop(char* fullDeviceID)
         if (!client.connected()) {
             reconnect(fullDeviceID);
         }
-        client.loop();
-        timeClient.update();
-        timeClient.getFormattedDate();
+        else
+        {
+            client.loop();
+            timeClient.update();
+            timeClient.getFormattedDate();
+        }
         return true;
     }
     return false;
@@ -147,7 +150,7 @@ int wifi_ntp_getDays(void)
 static void reconnect(char* fullDeviceID) 
 {
   // Loop until we're reconnected
-    while (!client.connected()) 
+    if (!client.connected()) 
     {
         Serial.print("Attempting MQTT connection...");
         // Attempt to connect
