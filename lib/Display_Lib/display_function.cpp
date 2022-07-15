@@ -113,6 +113,8 @@ typedef enum {
     E_STATE_ONESHOT_TASK_SPO2,
     E_STATE_CONTINUOUS_TASK,
     E_STATE_TEST_CONNECTION_TASK,
+    E_STATE_FACTORY_RESET_TASK,
+    E_STATE_CANCEL_CONNECTION_TASK,
 } eUSER_TASK_STATE;
 
 void display_state(uint8_t bStateUserTask)
@@ -141,6 +143,10 @@ void display_state(uint8_t bStateUserTask)
   case E_STATE_ONESHOT_TASK_SPO2/* constant-expression */:
     /* code */
     display.print("MEASURE SPO2 ");
+    break;
+  case E_STATE_CANCEL_CONNECTION_TASK/* constant-expression */:
+    /* code */
+    display.print("CANCEL CONNECTION ");
     break;
   default:
     break;

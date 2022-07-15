@@ -159,9 +159,9 @@ void task_Application(void *parameter)
           Serial.println("[DEBUG]: STARTUP TASK!");
           //display_Setup(bDeviceMode);
           /* Display mode */
-          vTaskDelay(3000);
+          vTaskDelay(2000/ portTICK_PERIOD_MS);
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_config(sensor_getTemp());
           bFlag_1st_TaskState = false;
         }
@@ -183,12 +183,27 @@ void task_Application(void *parameter)
           #endif /**/
         }
         break;
+      case E_STATE_CANCEL_CONNECTION_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          Serial.println("[DEBUG]: CANCEL CONNECTION TASK!");
+          bFlag_1st_TaskState = false;
+          /* Cancel wifi */
+          bFlagTestConnectionStart = false;
+          wifi_cancel_connect();
+        }
+        else
+        {
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_STARTUP_TASK;
+        }
+      break;
       case E_STATE_ONESHOT_TASK:
         if(bFlag_1st_TaskState)
         {
           Serial.println("[DEBUG]: ONESHOT TASK!");
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_config1(sensor_getTemp(), MaxHearbeat, MaxSPO2);
           bFlag_1st_TaskState = false;
         }
@@ -211,19 +226,19 @@ void task_Application(void *parameter)
         {
           Serial.println("[DEBUG]: ONESHOT TASK TEMPERATURE!");
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_single_temp_shot(bSingleTempShot);
           bSingleTempShot = 0;
           bFlag_1st_TaskState = false;
         }
         else{
           /* Delay 1s to display 0 */
-          vTaskDelay(500);
+          vTaskDelay(500/ portTICK_PERIOD_MS);
           bSingleTempShot = sensor_getTemp();
           App_BLE_SendTemp(bSingleTempShot);
           App_mqtt_SendTemp(bSingleTempShot);
           /* Delay 1s to display */
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_single_temp_shot(bSingleTempShot);
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_STARTUP_TASK;
@@ -235,7 +250,7 @@ void task_Application(void *parameter)
         {
           Serial.println("[DEBUG]: ONESHOT TASK SP02!");
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_single_spo2_shot(0,0);
           bFlag_1st_TaskState = false;
           startFlag = true;
@@ -255,7 +270,7 @@ void task_Application(void *parameter)
             display_single_spo2_shot(Bpm,SPO2);
             App_mqtt_SendSPO2(Bpm,SPO2);
             /* Delay 5s to display */
-            vTaskDelay(5000);
+            vTaskDelay(5000/ portTICK_PERIOD_MS);
             eUserTask_State = E_STATE_STARTUP_TASK;
             bFlag_1st_TaskState = true;
             /* Shut down device */
@@ -274,7 +289,7 @@ void task_Application(void *parameter)
         {
           Serial.println("[DEBUG]: PROCESING TASK!");
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_config2(sensor_getTemp());
           bFlag_1st_TaskState = false;
         }
@@ -295,7 +310,7 @@ void task_Application(void *parameter)
         {
           Serial.println("[DEBUG]: CONTINOUS TASK!");
           display_state(eUserTask_State);
-          vTaskDelay(1000);
+          vTaskDelay(1000/ portTICK_PERIOD_MS);
           display_config1(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
           bFlag_1st_TaskState = false;
         }
@@ -351,7 +366,7 @@ void task_Application(void *parameter)
               App_Parameter_Save(&StrCfg1);
               /* Feedback to BLE */
               App_BLE_SendTestConnection(1);
-              vTaskDelay(2000);
+              vTaskDelay(2000/ portTICK_PERIOD_MS);
               //ESP.restart();
             }
             else
@@ -361,14 +376,14 @@ void task_Application(void *parameter)
                 display_server_connect_state(2);
                 /* Feedback to BLE */
                 App_BLE_SendTestConnection(2);
-                vTaskDelay(2000);
+                vTaskDelay(2000/ portTICK_PERIOD_MS);
                 LED_GREEN_TOG;
               }
               else
               {
                 /* Feedback to BLE */
                 App_BLE_SendTestConnection(1);
-                vTaskDelay(2000);
+                vTaskDelay(2000/ portTICK_PERIOD_MS);
                 eUserTask_State = E_STATE_STARTUP_TASK;
                 bFlag_1st_TaskState = true;
                 bFlagTestConnectionStart = false;
@@ -383,7 +398,7 @@ void task_Application(void *parameter)
             {
               display_server_connect_state(0);
               App_BLE_SendTestConnection(0);
-              vTaskDelay(2000);
+              vTaskDelay(2000/ portTICK_PERIOD_MS);
               LED_RED_TOG;
               Serial.print(".");
             }
@@ -612,7 +627,7 @@ bool vWifiTask(void)
           else
           {
               Serial.print(".");
-              vTaskDelay(500);
+              vTaskDelay(500/ portTICK_PERIOD_MS);
               bReturn = false;
           }
         }
@@ -669,7 +684,13 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
       }
-      break;
+    break;
+    case E_CANCEL_TEST_CONNECTION_ID:
+      if(eUserTask_State == E_STATE_TEST_CONNECTION_TASK)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_CANCEL_CONNECTION_TASK;
+      }
     break;
     case E_PASS_CFG_ID:
       memset(StrCfg1.Parameter.WifiPASS,0,sizeof(StrCfg1.Parameter.WifiPASS));

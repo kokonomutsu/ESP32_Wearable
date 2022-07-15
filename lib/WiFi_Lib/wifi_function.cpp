@@ -9,6 +9,7 @@
 #include <WiFiUdp.h>
 
 #include "wifi_function.h"
+#include <esp_wifi.h>
 
 /****************************************************************************/
 /***        Local Function Prototypes                                     ***/
@@ -59,6 +60,14 @@ bool wifi_setup_mqtt(void (*callback)(char* topic, uint8_t* message, unsigned in
 void wifi_disconnect(void)
 {
     WiFi.disconnect(true);
+}
+
+void wifi_cancel_connect(void)
+{
+    if(WiFi.status() == WL_CONNECTED)
+    {
+        wifi_disconnect();
+    }
 }
 
 bool wifi_loop(char* fullDeviceID)
