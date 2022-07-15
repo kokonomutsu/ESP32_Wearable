@@ -157,6 +157,9 @@ void task_Application(void *parameter)
         {
           //read work mode
           Serial.println("[DEBUG]: STARTUP TASK!");
+          //display_Setup(bDeviceMode);
+          /* Display mode */
+          vTaskDelay(3000);
           display_state(eUserTask_State);
           vTaskDelay(1000);
           display_config(sensor_getTemp());
@@ -301,6 +304,22 @@ void task_Application(void *parameter)
           App_mqtt_SendSensor(sensor_getTemp(), sensor_getHeardBeat(), sersor_getSPO2());
         }
         break;
+      case E_STATE_FACTORY_RESET_TASK:
+        if(bFlag_1st_TaskState)
+        {
+          Serial.println("[DEBUG]: FACTORY RESET!");
+          bFlag_1st_TaskState = false;
+          LED_BLUE_TOG;
+          LED_RED_TOG;
+          LED_GREEN_TOG;
+          display_factory_reset();
+        }
+        else
+        {
+          vTaskDelay(2000 / portTICK_PERIOD_MS);
+          ESP.restart();
+        }
+      break;
       case E_STATE_TEST_CONNECTION_TASK:
         static uint32_t bTestConnectionTimeOut = 0;
         if(bFlag_1st_TaskState)
@@ -426,7 +445,7 @@ void task_IO(void *parameter)
         ESP.restart();
       }
     }
-    else if(MODE_BUT_VAL == eButtonLongPressT1){
+    else if(MODE_BUT_VAL == eButtonHoldOn){
       MODE_BUT_VAL = eButtonHoldOff;
       bDeviceMode = MODE_BLE;
       StrCfg1.Parameter.bLastMode = bDeviceMode;
@@ -434,9 +453,8 @@ void task_IO(void *parameter)
       memset(StrCfg1.Parameter.WifiSSID,0,sizeof(StrCfg1.Parameter.WifiSSID));
       memset(StrCfg1.Parameter.ServerURL,0,sizeof(StrCfg1.Parameter.ServerURL));
       App_Parameter_Save(&StrCfg1);
-      /* Delay before restart */
-      vTaskDelay(1000 / portTICK_PERIOD_MS);
-      ESP.restart();
+      eUserTask_State = E_STATE_FACTORY_RESET_TASK;
+      bFlag_1st_TaskState = true;
     }
   }
   vTaskDelay(10 / portTICK_PERIOD_MS);

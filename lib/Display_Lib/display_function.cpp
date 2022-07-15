@@ -63,6 +63,20 @@ void display_config(double temp)
   display.display(); 
 }
 
+void display_factory_reset(void)
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+
+  display.setCursor(30,15);  
+  display.setTextSize(2);
+  display.print("FACTORY");
+  display.setCursor(30,35);
+  display.print("RESET");  
+  
+  display.display(); 
+}
+
 void display_config1(double temp, int Bpm, int SPO2)
 {
   display.clearDisplay();

@@ -5,6 +5,8 @@ void display_Setup(uint8_t bMODE);
 
 void display_config(double temp);
 
+void display_factory_reset(void);
+
 void display_config1(double temp, int Bpm, int SPO2);
 
 void display_config2(double temp);

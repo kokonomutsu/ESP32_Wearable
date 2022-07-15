@@ -80,7 +80,7 @@ enumbool vIO_ConfigOutput(structIO_Manage_Output *pOutput, enumbool bStartState,
 #define TIME_SINGLE_PRESS		10	/* 10 cycle of Button Process 100ms */
 #define TIME_LONG_PRESS_T1		200	/* 100 cycle of Button Process 1s */
 #define TIME_LONG_PRESS_T2 		300	/* 200 cycle of Button Process ~ 2000ms = 2s */
-#define TIME_HOLD_ON 			600	/* 600 cycle of Button Process ~ 6000ms = 6s */
+#define TIME_HOLD_ON 			1000/* 1000 cycle of Button Process ~ 10000ms = 10s */
 #define TIME_HOLD_OFF 			10	/* 10 cycle of Button Process ~ 100ms */
 #define TIME_HOLD_OFF_LONG_T1	100	/* 100 cycle of Button Process ~ 1s */
 #define TIME_HOLD_OFF_LONG_T2	200	/* 200 cycle of Button Process ~ 2s */
