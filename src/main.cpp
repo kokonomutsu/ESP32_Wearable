@@ -33,6 +33,7 @@ void App_Parameter_Read(StrConfigPara *StrCfg);
 void App_Parameter_Save(StrConfigPara *StrCfg);
 
 bool vWifiTask(void);
+void vUpdatePrivateKeyString(void);
 
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -67,6 +68,7 @@ char fullTopic[50];
 char msg[2000];
 uint8_t bUserId = 6;
 bool bFlagTestConnectionStart = false;
+char deviceprivatekey[100];
 /* Working mode */
 uint8_t bDeviceMode = MODE_BLE;
 /* Wifi task */
@@ -540,7 +542,7 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
-  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
+  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
   //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   /* Make Full device */
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
@@ -583,9 +585,9 @@ void setup()
   strOld_IO_Button_Value.bButtonState[eButton2] = eButtonRelease;
 
   /* Add device cloud */
-  device = new CloudIoTCoreDevice(
-      project_id, location, registry_id, device_id,
-      private_key_str);
+//  device = new CloudIoTCoreDevice(
+//      project_id, location, registry_id, device_id,
+//      private_key_str);
 
   /* Device setup */
   sensor_Setup();
@@ -627,6 +629,11 @@ bool vWifiTask(void)
         {
           if(wifi_connect_status() == true)
           {
+              /* add device with private key */
+              vUpdatePrivateKeyString();
+              device = new CloudIoTCoreDevice(
+                project_id, location, registry_id, device_id,
+                deviceprivatekey);
               wifi_setup_mqtt(&App_mqtt_callback, StrCfg1.Parameter.ServerURL, 1883);
               bFlag1stServerConnect = false;
               bReturn = true;
@@ -661,6 +668,23 @@ void loop() {
   vWifiTask();
 }
 
+void vUpdatePrivateKeyString(void)
+{
+  static int counter = 0;
+  /* onvert to private key string format */
+  for(int bIndex=0;bIndex<sizeof(StrCfg1.Parameter.PrivateKey);bIndex+=2)
+  {
+    
+      deviceprivatekey[counter] = StrCfg1.Parameter.PrivateKey[bIndex];
+      counter++;
+      deviceprivatekey[counter] = StrCfg1.Parameter.PrivateKey[bIndex+1];
+      counter++;
+      deviceprivatekey[counter] = ':'; 
+      counter++;
+  }
+  /* erase last byte */
+  deviceprivatekey[counter] = NULL; 
+}
 /****************************************************************************/
 /***        BLE Function                                                  ***/
 /****************************************************************************/
@@ -678,6 +702,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<SSID_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiSSID);
+        Serial.println("Wifi ssid!\r\n");
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
@@ -709,6 +734,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int j=i;j<PASS_MAX_SIZE;j++)
           StrCfg1.Parameter.WifiPASS[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiPASS);
+        Serial.println("Wifi password!\r\n");
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
@@ -754,6 +780,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.ServerURL[i] = pu8Data[i];
         for(int j=i;j<URL_MAX_SIZE;j++)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
+        Serial.println("URL!\r\n");
         Serial.println(StrCfg1.Parameter.ServerURL);
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
@@ -763,14 +790,24 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       BLE_configMsg(12, 0, E_DEVICE_DATA_ID, SeqID++, 2, StrCfg1.Parameter.DeviceID);
       break;
     case E_PRIVATE_KEY_ID:
-      if((MsgLength - 8) <= URL_MAX_SIZE)
+      memset(deviceprivatekey,0,sizeof(deviceprivatekey));
+      if((MsgLength - 8) <= PRIVATE_KEY_SIZE)
       {
         int i;
         for(i=0;i<(MsgLength - 8);i++)
+        {
           StrCfg1.Parameter.PrivateKey[i] = pu8Data[i];
-        for(int j=i;j<URL_MAX_SIZE;j++)
+        }
+        for(int j=i;j<PRIVATE_KEY_SIZE;j++)
+        {
           StrCfg1.Parameter.PrivateKey[j] = 0x00;
+        }
+        /* Update key string */
+        vUpdatePrivateKeyString();
+        Serial.println("Private key!\r");
         Serial.println(StrCfg1.Parameter.PrivateKey);
+        Serial.println("Private key string!\r");
+        Serial.println(deviceprivatekey);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;

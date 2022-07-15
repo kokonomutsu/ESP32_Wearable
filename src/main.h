@@ -12,7 +12,7 @@
 #define SSID_MAX_SIZE       (int)25
 #define PASS_MAX_SIZE       (int)25
 #define URL_MAX_SIZE        (int)30
-#define PRIVATE_KEY_SIZE    (int)32
+#define PRIVATE_KEY_SIZE    (int)65
 
 typedef enum {  
     E_STATE_STARTUP_TASK,
