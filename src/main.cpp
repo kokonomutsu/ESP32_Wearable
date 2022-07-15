@@ -670,11 +670,10 @@ void loop() {
 
 void vUpdatePrivateKeyString(void)
 {
-  static int counter = 0;
+  int counter = 0;
   /* onvert to private key string format */
-  for(int bIndex=0;bIndex<sizeof(StrCfg1.Parameter.PrivateKey);bIndex+=2)
+  for(int bIndex=0;bIndex<(sizeof(StrCfg1.Parameter.PrivateKey)-1);bIndex+=2)
   {
-    
       deviceprivatekey[counter] = StrCfg1.Parameter.PrivateKey[bIndex];
       counter++;
       deviceprivatekey[counter] = StrCfg1.Parameter.PrivateKey[bIndex+1];
@@ -683,6 +682,7 @@ void vUpdatePrivateKeyString(void)
       counter++;
   }
   /* erase last byte */
+  counter--;
   deviceprivatekey[counter] = NULL; 
 }
 /****************************************************************************/
