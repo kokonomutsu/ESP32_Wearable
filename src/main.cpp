@@ -703,7 +703,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiSSID[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiSSID);
         Serial.println("Wifi ssid!\r\n");
-        App_Parameter_Save(&StrCfg1);
+        //App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
@@ -735,7 +735,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.WifiPASS[j] = 0x00;
         Serial.println(StrCfg1.Parameter.WifiPASS);
         Serial.println("Wifi password!\r\n");
-        App_Parameter_Save(&StrCfg1);
+        //App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
@@ -782,7 +782,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           StrCfg1.Parameter.ServerURL[j] = 0x00;
         Serial.println("URL!\r\n");
         Serial.println(StrCfg1.Parameter.ServerURL);
-        App_Parameter_Save(&StrCfg1);
+        //App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
@@ -808,7 +808,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         Serial.println(StrCfg1.Parameter.PrivateKey);
         Serial.println("Private key string!\r");
         Serial.println(deviceprivatekey);
-        App_Parameter_Save(&StrCfg1);
+        //App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
