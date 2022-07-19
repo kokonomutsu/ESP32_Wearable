@@ -542,7 +542,7 @@ void setup()
   //memcpy(&StrCfg1.Parameter.WifiSSID,"lau 1 nha 1248 - mr",sizeof("lau 1 nha 1248 - mr"));
   //memcpy(&StrCfg1.Parameter.WifiPASS, "88888888", sizeof("88888888"));
   //memcpy(&StrCfg1.Parameter.ServerURL, "206.189.158.67", sizeof("206.189.158.67"));
-  memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
+  //memcpy(&StrCfg1.Parameter.ServerURL, "103.170.123.115", sizeof("103.170.123.115"));//server PicopPiece
   //memcpy(&StrCfg1.Parameter.ServerURL, "34.146.132.228", sizeof("34.146.132.228"));//server FPT
   /* Make Full device */
   sprintf(fullDeviceID, "FPT_FCCIoT_%C%C%C%C", StrCfg1.Parameter.DeviceID[0], 
@@ -808,6 +808,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         Serial.println(StrCfg1.Parameter.PrivateKey);
         Serial.println("Private key string!\r");
         Serial.println(deviceprivatekey);
+        App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
