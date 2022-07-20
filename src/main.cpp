@@ -27,6 +27,7 @@ void App_mqtt_callback(char* topic, byte* message, unsigned int length);
 bool App_mqtt_SendTemp(double temp);
 bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2);
 bool App_mqtt_SendSPO2(int HeartRate, int SPO2);
+bool App_mqtt_SendJWT(String jwt);
 bool App_mqtt_SendStatus(uint8_t ErrorStt, uint8_t TempStt, uint8_t Spo2Stt);
 
 void App_Parameter_Read(StrConfigPara *StrCfg);
@@ -654,6 +655,8 @@ bool vWifiTask(void)
             bFlagGetJWT = false;
             /* Try get JWT */
             Serial.println(getJwt().c_str());
+            /* Send jwt */
+            App_mqtt_SendJWT(jwt);
           }
         }
       }
@@ -922,6 +925,40 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
         }
       }
     }
+}
+bool App_mqtt_SendJWT(String jwt)
+{
+  if(wifi_mqtt_isConnected())
+  {
+    /* Json send message */
+    sprintf(strTime,
+            "%d-%d-%dT%s",wifi_ntp_getYears(),
+            wifi_ntp_getMonths(),
+            wifi_ntp_getDays(),
+            wifi_ntp_getTime());
+    Serial.println(strTime);
+    sprintf(fullTopic, "tele/%s/iot", fullDeviceID);
+    Serial.println(fullTopic);
+    /* Add to json */
+    MQTT_JsonDoc.clear();
+    MQTT_JsonDoc["owner"]   = typeOwneriot;
+    MQTT_JsonDoc["topic"]   = fullTopic;
+    MQTT_JsonDoc["type"]    = iotReqCon;
+    MQTT_JsonDoc["index"]   = strMQTTSendPackage.index;
+    MQTT_JsonDoc["total"]   = strMQTTSendPackage.total;
+    MQTT_JsonDoc["messageId"]   = strMQTTSendPackage.messageId++;
+    MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
+    MQTT_JsonDoc["data"]["userId"] = bUserId;
+    MQTT_JsonDoc["data"]["jwt"] = jwt;
+    MQTT_JsonDoc["data"]["dateTime"] = strTime;
+    MQTT_JsonDoc["data"]["evaluationResult"] = "";
+    MQTT_JsonDoc["data"]["position"] = "finger";
+    serializeJson(MQTT_JsonDoc, msg);
+    Serial.println(msg);
+    wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "iot", msg);
+    return true;
+  }
+  return false;
 }
 
 bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
