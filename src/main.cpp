@@ -653,6 +653,12 @@ bool vWifiTask(void)
           if((wifi_mqtt_isConnected()==true)&&(bFlagGetJWT==true))
           {
             bFlagGetJWT = false;
+            /* Sync time */
+            configTime(0, 0, ntp_primary, ntp_secondary);
+            Serial.println("Waiting on time sync...");
+            while (time(nullptr) < 1510644967) {
+              delay(10);
+            }
             /* Try get JWT */
             Serial.println(getJwt().c_str());
             /* Send jwt */
@@ -950,9 +956,6 @@ bool App_mqtt_SendJWT(String jwt)
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["jwt"] = jwt;
-    MQTT_JsonDoc["data"]["dateTime"] = strTime;
-    MQTT_JsonDoc["data"]["evaluationResult"] = "";
-    MQTT_JsonDoc["data"]["position"] = "finger";
     serializeJson(MQTT_JsonDoc, msg);
     Serial.println(msg);
     wifi_mqtt_publish(StrCfg1.Parameter.DeviceID, "iot", msg);
