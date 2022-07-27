@@ -659,6 +659,8 @@ bool vWifiTask(void)
             while (time(nullptr) < 1510644967) {
               delay(10);
             }
+            /* Update NTP */
+            wifi_ntp_update();
             /* Try get JWT */
             Serial.println(getJwt().c_str());
             /* Send jwt */
@@ -938,7 +940,7 @@ bool App_mqtt_SendJWT(String jwt)
   {
     /* Json send message */
     sprintf(strTime,
-            "%d-%d-%dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -970,7 +972,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-            "%d-%d-%dT%s",wifi_ntp_getYears(),
+        "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1007,7 +1009,7 @@ bool App_mqtt_SendTemp(double temp)
   {
     /* Json send message */
     sprintf(strTime,
-            "%d-%d-%dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1042,7 +1044,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-            "%d-%d-%dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());

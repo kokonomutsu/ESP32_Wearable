@@ -144,6 +144,11 @@ int wifi_ntp_getDays(void)
     return timeClient.getDate();
     //return 0;
 }
+void wifi_ntp_update(void)
+{
+    timeClient.update();
+    timeClient.getFormattedDate();
+}
 /****************************************************************************/
 /***              Local Function			                               **/
 /****************************************************************************/
