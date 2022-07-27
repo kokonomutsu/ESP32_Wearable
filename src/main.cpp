@@ -932,6 +932,9 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
           eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
         }
       }
+      else if(MQTT_JsonReceiveDoc["type"] == 2){
+          Serial.println("[DEBUG][MQTT]: Get config command from server!\r\n");
+      }
     }
 }
 bool App_mqtt_SendJWT(String jwt)
