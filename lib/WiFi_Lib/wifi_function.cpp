@@ -81,6 +81,7 @@ bool wifi_loop(char* fullDeviceID)
         {
             client.loop();
             timeClient.update();
+            timeClient.setTimeOffset(0);//GMT 0
             timeClient.getFormattedDate();
         }
         return true;
@@ -147,6 +148,7 @@ int wifi_ntp_getDays(void)
 void wifi_ntp_update(void)
 {
     timeClient.update();
+    timeClient.setTimeOffset(0);//GMT 0
     timeClient.getFormattedDate();
 }
 /****************************************************************************/
