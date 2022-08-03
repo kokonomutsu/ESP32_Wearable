@@ -426,7 +426,7 @@ void task_Application(void *parameter)
         }
       break;
     }
-    vTaskDelay((StrCfg1.Parameter.interval*1000) / portTICK_PERIOD_MS);
+    vTaskDelay((StrCfg1.Parameter.bAutoMeasureInterval*1000) / portTICK_PERIOD_MS);
   }
 }
 
@@ -564,9 +564,9 @@ void setup()
   MQTT_JsonDoc["data"]["jwt"] = strMQTTSendPackage.strMQTTdata.jwt;
   serializeJson(MQTT_JsonDoc, Serial);*/
 
-  if(StrCfg1.Parameter.interval > 9999)
+  if(StrCfg1.Parameter.bAutoMeasureInterval > 9999)
   {
-    StrCfg1.Parameter.interval = 1;
+    StrCfg1.Parameter.bAutoMeasureInterval = 1;
     App_Parameter_Save(&StrCfg1);
   }
   Serial.println("[DEBUG]: SYSTEM INIT!");
@@ -757,14 +757,24 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         for(int i=0;i<(MsgLength - 8);i++){
           temp = temp*10 + *(pu8Data + i) - 48;
         }
-        StrCfg1.Parameter.interval = temp;
+        StrCfg1.Parameter.bAutoMeasureInterval = temp;
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
     }
     case E_WORK_MODE_ID:
-      
+      /* Parse and get mode */
+      if(pu8Data[0]==0)
+      {
+        StrCfg1.Parameter.bWorkingMode = MODE_MANUAL;
+      }
+      else if(pu8Data[0]==1)
+      {
+        StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+      }
+      /* Working mode */
+      App_Parameter_Save(&StrCfg1);
       break;
     case E_ONESHOT_TEMP_ID:
       LED_GREEN_TOG;
@@ -772,6 +782,11 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       {
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+        if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+        {
+          StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+          App_Parameter_Save(&StrCfg1);
+        }
       }
       break;
     case E_ONESHOT_SPO2_ID:
@@ -780,6 +795,11 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       {
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+        if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+        {
+          StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
+          App_Parameter_Save(&StrCfg1);
+        }
       }
       break;
     case E_URL_CFG_ID:
@@ -922,6 +942,11 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
           bUserId = MQTT_JsonReceiveDoc["data"]["userId"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+          if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+          {
+            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+            App_Parameter_Save(&StrCfg1);
+          }
         }
       }
       else if(MQTT_JsonReceiveDoc["type"] == 8){
@@ -930,6 +955,11 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
           bUserId = MQTT_JsonReceiveDoc["data"]["userId"];
           bFlag_1st_TaskState = true;
           eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+          if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+          {
+            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
+            App_Parameter_Save(&StrCfg1);
+          }
         }
       }
       else if(MQTT_JsonReceiveDoc["type"] == 2){

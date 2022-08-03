@@ -30,18 +30,25 @@ typedef enum {
 #define MODE_WIFI 2
 #define MODE_DUAL 3
 
+#define eMEASURE_TEMP 1
+#define eMEASURE_SPO2 2
+
+#define MODE_MANUAL  1
+#define MODE_AUTO    2
+
 typedef union Struct_Flash_Config_Parameter
 {
     struct
     {
-        uint8_t workMode;
-        uint16_t interval;
+        uint8_t bWorkingMode;
+        uint16_t bAutoMeasureInterval;
         uint8_t DeviceID[DEVICE_ID_SIZE];
         char WifiSSID[SSID_MAX_SIZE];
         char WifiPASS[PASS_MAX_SIZE];
         char ServerURL[URL_MAX_SIZE];
         char PrivateKey[PRIVATE_KEY_SIZE];
         uint8_t bLastMode;
+        uint8_t bLastMeasureCommand;
     }Parameter;
     unsigned char paraBuffer[sizeof(Parameter)];
 }StrConfigPara;
