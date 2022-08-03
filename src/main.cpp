@@ -426,7 +426,8 @@ void task_Application(void *parameter)
         }
       break;
     }
-    vTaskDelay((StrCfg1.Parameter.bAutoMeasureInterval*1000) / portTICK_PERIOD_MS);
+    /* Task delay */
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -514,6 +515,33 @@ void task_Kernel_IO(void *parameter)
   }
 }
 
+void task_TimingAuto(void *parameter)
+{
+  for(;;) {
+    if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+    {
+      /* Check auto mode to measure */
+      if(StrCfg1.Parameter.bLastMeasureCommand == eMEASURE_TEMP)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+        Serial.println("[DEBUG]: AUTO TIMING MEASURE TEMP!");
+      }
+      else if(StrCfg1.Parameter.bLastMeasureCommand == eMEASURE_SPO2)
+      {
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+        Serial.println("[DEBUG]: AUTO TIMING MEASURE SPO2!");
+      }
+      vTaskDelay((StrCfg1.Parameter.bAutoMeasureInterval*1000) / portTICK_PERIOD_MS);
+    }
+    else
+    {
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+  }
+}
+
 /****************************************************************************/
 /***        Application Function                                          ***/
 /****************************************************************************/
@@ -569,6 +597,12 @@ void setup()
     StrCfg1.Parameter.bAutoMeasureInterval = 1;
     App_Parameter_Save(&StrCfg1);
   }
+
+  /* Testing auto-manual mode */
+  StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+  StrCfg1.Parameter.bAutoMeasureInterval = 10;/* 10s*/
+  StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+
   Serial.println("[DEBUG]: SYSTEM INIT!");
   Serial.println("[DEBUG]: LED INIT!");
   LED1_Init(&pLED1);
@@ -608,6 +642,7 @@ void setup()
   xTaskCreate(task_IO,"Task 2",8192,NULL,1,NULL);
   xTaskCreate(task_Kernel_IO,"Task 3",8192,NULL,1,NULL);
   xTaskCreate(task_Application,"Task 4",8192,NULL,1,NULL);
+  xTaskCreate(task_TimingAuto,"Task 5",4096,NULL,2,NULL);
 }
 
 bool vWifiTask(void)
