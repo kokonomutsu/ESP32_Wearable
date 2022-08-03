@@ -72,6 +72,7 @@ bool bFlagTestConnectionStart = false;
 char deviceprivatekey[100];
 /* Working mode */
 uint8_t bDeviceMode = MODE_BLE;
+static bool bFlagStartAutoMeasuring = true;
 /* Wifi task */
 static bool bFlag1stWifiConnect = true;
 static bool bFlag1stServerConnect = true;
@@ -518,7 +519,7 @@ void task_Kernel_IO(void *parameter)
 void task_TimingAuto(void *parameter)
 {
   for(;;) {
-    if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+    if((StrCfg1.Parameter.bWorkingMode == MODE_AUTO)&&(bFlagStartAutoMeasuring==true))
     {
       /* Check auto mode to measure */
       if(StrCfg1.Parameter.bLastMeasureCommand == eMEASURE_TEMP)
@@ -803,10 +804,12 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       if(pu8Data[0]==0)
       {
         StrCfg1.Parameter.bWorkingMode = MODE_MANUAL;
+        bFlagStartAutoMeasuring = false;
       }
       else if(pu8Data[0]==1)
       {
         StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+        bFlagStartAutoMeasuring = true;
       }
       /* Working mode */
       App_Parameter_Save(&StrCfg1);
@@ -819,8 +822,12 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
         if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
         {
-          StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
-          App_Parameter_Save(&StrCfg1);
+          if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_TEMP)
+          {
+            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+            App_Parameter_Save(&StrCfg1);
+          }
+          bFlagStartAutoMeasuring = true;
         }
       }
       break;
@@ -832,8 +839,12 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
         if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
         {
-          StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
-          App_Parameter_Save(&StrCfg1);
+          if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_SPO2)
+          {
+            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
+            App_Parameter_Save(&StrCfg1);
+          }
+          bFlagStartAutoMeasuring = true;
         }
       }
       break;
@@ -979,8 +990,12 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
           eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
           if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
           {
-            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
-            App_Parameter_Save(&StrCfg1);
+            if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_TEMP)
+            {
+              StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+              App_Parameter_Save(&StrCfg1);
+            }
+            bFlagStartAutoMeasuring = true;
           }
         }
       }
@@ -992,8 +1007,12 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
           eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
           if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
           {
-            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
-            App_Parameter_Save(&StrCfg1);
+            if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_SPO2)
+            {
+              StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
+              App_Parameter_Save(&StrCfg1);
+            }
+            bFlagStartAutoMeasuring = true;
           }
         }
       }
