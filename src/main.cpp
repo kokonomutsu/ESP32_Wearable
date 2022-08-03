@@ -1040,7 +1040,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-        "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
+        "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1077,7 +1077,7 @@ bool App_mqtt_SendTemp(double temp)
   {
     /* Json send message */
     sprintf(strTime,
-            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1112,7 +1112,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
