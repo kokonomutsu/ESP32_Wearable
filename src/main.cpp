@@ -819,7 +819,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       {
         StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
         Serial.println("BLE CONFIG AUTO COMMAND!\r\n");
-        bFlagStartAutoMeasuring = true;
+        bFlagStartAutoMeasuring = false;
         bFlag_1st_TaskState = true;
         eUserTask_State = E_STATE_STARTUP_TASK;
       }
