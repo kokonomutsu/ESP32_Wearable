@@ -904,7 +904,8 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
     case E_STOP_MEASURE_ID:
       if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
       {
-
+        /* Stop auto measuring */
+        bFlagStartAutoMeasuring = false;
       }
       break;
     case E_CONTINUOUS_MODE_ID:
