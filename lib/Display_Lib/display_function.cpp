@@ -63,15 +63,16 @@ void display_config(double temp, uint8_t mode)
   display.print((char)247);
   display.print("C");
   
-  display.setCursor(40,50);  
   display.setTextSize(1);
   if(mode == MODE_MANUAL)
   {
+    display.setCursor(40,50);  
     display.print("ONE SHOT");
   }
   else
   {
-    display.print("AUTO");
+    display.setCursor(35,50);  
+    display.print("AUTO MEASURE");
   }
 
   display.display(); 
