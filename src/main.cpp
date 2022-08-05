@@ -169,12 +169,12 @@ void task_Application(void *parameter)
           vTaskDelay(2000/ portTICK_PERIOD_MS);
           display_state(eUserTask_State);
           vTaskDelay(1000/ portTICK_PERIOD_MS);
-          display_config(sensor_getTemp());
+          display_config(sensor_getTemp(), StrCfg1.Parameter.bWorkingMode);
           bFlag_1st_TaskState = false;
         }
         else{
           //Check finger in?
-          display_config(sensor_getTemp());
+          display_config(sensor_getTemp(), StrCfg1.Parameter.bWorkingMode);
           /* STARTUP-IDLE just measure, not send BLE data */
           //App_BLE_SendTemp(sensor_getTemp());
           /* Ping server */
@@ -438,15 +438,15 @@ void task_IO(void *parameter)
     if(START_BUT_VAL == eButtonSingleClick)
     {
       START_BUT_VAL = eButtonHoldOff;
-      LED_BLUE_TOG;
-      if(eUserTask_State == E_STATE_STARTUP_TASK){
-        eUserTask_State = E_STATE_TEST_CONNECTION_TASK;
-        bFlag_1st_TaskState = true;
+      if(StrCfg1.Parameter.bWorkingMode == MODE_MANUAL){
+        StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+        LED_BLUE_TOG;
       }
-      /*else if(eUserTask_State == E_STATE_TEST_CONNECTION_TASK){
-        eUserTask_State = E_STATE_CANCEL_CONNECTION_TASK;
-        bFlag_1st_TaskState = true;
-      }*/
+      else if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO){
+        StrCfg1.Parameter.bWorkingMode = MODE_MANUAL;
+        LED_GREEN_TOG;
+      }
+      App_Parameter_Save(&StrCfg1);
     }
 
     if(MODE_BUT_VAL == eButtonSingleClick)
@@ -600,9 +600,12 @@ void setup()
   }
 
   /* Testing auto-manual mode */
-  StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
-  StrCfg1.Parameter.bAutoMeasureInterval = 10;/* 10s*/
-  StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+  //StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+  //StrCfg1.Parameter.bAutoMeasureInterval = 10;/* 10s*/
+  //StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+
+  /* MODE MANUAL */
+  //StrCfg1.Parameter.bWorkingMode = MODE_MANUAL;
 
   Serial.println("[DEBUG]: SYSTEM INIT!");
   Serial.println("[DEBUG]: LED INIT!");
@@ -890,7 +893,10 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       }
       break;
     case E_STOP_MEASURE_ID:
-      
+      if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+      {
+
+      }
       break;
     case E_CONTINUOUS_MODE_ID:
       LED_GREEN_TOG;
@@ -1027,7 +1033,7 @@ bool App_mqtt_SendJWT(String jwt)
   {
     /* Json send message */
     sprintf(strTime,
-            "%04d-%02d-%02dT%s",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s.000Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1059,7 +1065,7 @@ bool App_mqtt_SendSensor(double temp, int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-        "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s.000Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1096,7 +1102,7 @@ bool App_mqtt_SendTemp(double temp)
   {
     /* Json send message */
     sprintf(strTime,
-            "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s.000Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());
@@ -1131,7 +1137,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
   {
     /* Json send message */
     sprintf(strTime,
-            "%04d-%02d-%02dT%s0Z",wifi_ntp_getYears(),
+            "%04d-%02d-%02dT%s.000Z",wifi_ntp_getYears(),
             wifi_ntp_getMonths(),
             wifi_ntp_getDays(),
             wifi_ntp_getTime());

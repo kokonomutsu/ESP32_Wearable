@@ -45,7 +45,10 @@ void display_Setup(uint8_t bMODE)
   display.display();
 }
 
-void display_config(double temp)
+#define MODE_MANUAL  1
+#define MODE_AUTO    2
+
+void display_config(double temp, uint8_t mode)
 {
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -54,12 +57,23 @@ void display_config(double temp)
   display.setTextSize(1);
   display.print("TEMPERATURE");
 
-  display.setCursor(25,35);  
+  display.setCursor(25,30);  
   display.setTextSize(2);
   display.print(temp);
   display.print((char)247);
   display.print("C");
   
+  display.setCursor(40,50);  
+  display.setTextSize(1);
+  if(mode == MODE_MANUAL)
+  {
+    display.print("ONE SHOT");
+  }
+  else
+  {
+    display.print("AUTO");
+  }
+
   display.display(); 
 }
 

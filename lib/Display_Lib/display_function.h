@@ -3,7 +3,7 @@
 
 void display_Setup(uint8_t bMODE);
 
-void display_config(double temp);
+void display_config(double temp, uint8_t mode);
 
 void display_factory_reset(void);
 
