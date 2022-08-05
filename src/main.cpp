@@ -830,16 +830,19 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       LED_GREEN_TOG;
       if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
       {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
-        if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+        if(bFlagStartAutoMeasuring == false)
         {
-          if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_TEMP)
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+          if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
           {
-            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
-            App_Parameter_Save(&StrCfg1);
+            if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_TEMP)
+            {
+              StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_TEMP;
+              App_Parameter_Save(&StrCfg1);
+            }
+            bFlagStartAutoMeasuring = true;
           }
-          bFlagStartAutoMeasuring = true;
         }
       }
       break;
@@ -847,16 +850,19 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       LED_BLUE_TOG;
       if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
       {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
-        if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
+        if(bFlagStartAutoMeasuring == false)
         {
-          if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_SPO2)
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+          if(StrCfg1.Parameter.bWorkingMode == MODE_AUTO)
           {
-            StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
-            App_Parameter_Save(&StrCfg1);
+            if(StrCfg1.Parameter.bLastMeasureCommand != eMEASURE_SPO2)
+            {
+              StrCfg1.Parameter.bLastMeasureCommand = eMEASURE_SPO2;
+              App_Parameter_Save(&StrCfg1);
+            }
+            bFlagStartAutoMeasuring = true;
           }
-          bFlagStartAutoMeasuring = true;
         }
       }
       break;
