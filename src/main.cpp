@@ -797,6 +797,9 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
           temp = temp*10 + *(pu8Data + i) - 48;
         }
         StrCfg1.Parameter.bAutoMeasureInterval = temp;
+        Serial.println("BLE CONFIG INTERVAL COMMAND. INTERVAL: ");
+        Serial.println(temp);
+        Serial.println("\r\n");
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
@@ -807,12 +810,18 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       if(pu8Data[0]==0)
       {
         StrCfg1.Parameter.bWorkingMode = MODE_MANUAL;
+        Serial.println("BLE CONFIG ONE-SHOT COMMAND!\r\n");
         bFlagStartAutoMeasuring = false;
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_STARTUP_TASK;
       }
       else if(pu8Data[0]==1)
       {
         StrCfg1.Parameter.bWorkingMode = MODE_AUTO;
+        Serial.println("BLE CONFIG AUTO COMMAND!\r\n");
         bFlagStartAutoMeasuring = true;
+        bFlag_1st_TaskState = true;
+        eUserTask_State = E_STATE_STARTUP_TASK;
       }
       /* Working mode */
       App_Parameter_Save(&StrCfg1);
