@@ -71,7 +71,7 @@ void display_config(double temp, uint8_t mode)
   }
   else
   {
-    display.setCursor(35,50);  
+    display.setCursor(30,50);  
     display.print("AUTO MEASURE");
   }
 

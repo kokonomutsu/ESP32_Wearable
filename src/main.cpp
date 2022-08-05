@@ -267,7 +267,6 @@ void task_Application(void *parameter)
           sersor_reset_data_Value();
           MaxSPO2 = 0;
           MaxHearbeat = 0;
-          
         }
         else{
           if(sensor_processing(MaxSPO2, MaxHearbeat))
