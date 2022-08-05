@@ -914,6 +914,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         /* Stop auto measuring */
         bFlagStartAutoMeasuring = false;
       }
+      App_BLE_SendACK((Msg_teID_Type)MsgID);
       break;
     case E_CONTINUOUS_MODE_ID:
       LED_GREEN_TOG;
