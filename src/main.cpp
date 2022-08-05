@@ -825,6 +825,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
       }
       /* Working mode */
       App_Parameter_Save(&StrCfg1);
+      App_BLE_SendACK((Msg_teID_Type)MsgID);
       break;
     case E_ONESHOT_TEMP_ID:
       LED_GREEN_TOG;
