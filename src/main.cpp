@@ -70,6 +70,7 @@ char msg[2000];
 uint8_t bUserId = 6;
 bool bFlagTestConnectionStart = false;
 char deviceprivatekey[100];
+uint64_t uOrderTime;
 /* Working mode */
 uint8_t bDeviceMode = MODE_BLE;
 static bool bFlagStartAutoMeasuring = true;
@@ -523,15 +524,29 @@ void task_TimingAuto(void *parameter)
       /* Check auto mode to measure */
       if(StrCfg1.Parameter.bLastMeasureCommand == eMEASURE_TEMP)
       {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
-        Serial.println("[DEBUG]: AUTO TIMING MEASURE TEMP!");
+        if(eUserTask_State != E_STATE_ONESHOT_TASK_TEMP)
+        {
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_ONESHOT_TASK_TEMP;
+          Serial.println("[DEBUG]: TRIGGER AUTO TIMING MEASURE TEMP!");
+        }
+        else
+        {
+          Serial.println("[DEBUG]: MEASURING TEMP NOW!");
+        }
       }
       else if(StrCfg1.Parameter.bLastMeasureCommand == eMEASURE_SPO2)
       {
-        bFlag_1st_TaskState = true;
-        eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
-        Serial.println("[DEBUG]: AUTO TIMING MEASURE SPO2!");
+        if(eUserTask_State != E_STATE_ONESHOT_TASK_SPO2)
+        {
+          bFlag_1st_TaskState = true;
+          eUserTask_State = E_STATE_ONESHOT_TASK_SPO2;
+          Serial.println("[DEBUG]: TRIGGER AUTO TIMING MEASURE SPO2!");
+        }
+        else
+        {
+          Serial.println("[DEBUG]: MEASURING SP02 NOW!");
+        }
       }
       vTaskDelay((StrCfg1.Parameter.bAutoMeasureInterval*1000) / portTICK_PERIOD_MS);
     }
@@ -1020,6 +1035,11 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
             }
             bFlagStartAutoMeasuring = true;
           }
+          /* Save orderTime data */
+          uOrderTime = MQTT_JsonReceiveDoc["data"]["orderTime"];
+          Serial.print("[DEBUG][MQTT]: Get measure temp command from server! orderTime: ");
+          Serial.print(uOrderTime);
+          Serial.print("\r\n");
         }
       }
       else if(MQTT_JsonReceiveDoc["type"] == 8){
@@ -1037,6 +1057,11 @@ void App_mqtt_callback(char* topic, uint8_t* message, unsigned int length)
             }
             bFlagStartAutoMeasuring = true;
           }
+          /* Save orderTime data */
+          uOrderTime = MQTT_JsonReceiveDoc["data"]["orderTime"];
+          Serial.print("[DEBUG][MQTT]: Get measure spo2 command from server! orderTime: ");
+          Serial.print(uOrderTime);
+          Serial.print("\r\n");
         }
       }
       else if(MQTT_JsonReceiveDoc["type"] == 2){
@@ -1137,6 +1162,7 @@ bool App_mqtt_SendTemp(double temp)
     MQTT_JsonDoc["data"]["deviceId"] = fullDeviceID;
     MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["temp"] = temp;
+    MQTT_JsonDoc["data"]["orderTime"] = uOrderTime;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
     MQTT_JsonDoc["data"]["evaluationResult"] = "";
     MQTT_JsonDoc["data"]["position"] = "finger";
@@ -1173,6 +1199,7 @@ bool App_mqtt_SendSPO2(int HeartRate, int SPO2)
     MQTT_JsonDoc["data"]["userId"] = bUserId;
     MQTT_JsonDoc["data"]["pulse"] = HeartRate;
     MQTT_JsonDoc["data"]["spo2"] = SPO2;
+    MQTT_JsonDoc["data"]["orderTime"] = uOrderTime;
     MQTT_JsonDoc["data"]["dateTime"] = strTime;
     MQTT_JsonDoc["data"]["evaluationResult"] = "";
     MQTT_JsonDoc["data"]["position"] = "finger";
