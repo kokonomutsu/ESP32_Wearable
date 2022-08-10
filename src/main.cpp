@@ -918,7 +918,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         Serial.println(StrCfg1.Parameter.PrivateKey);
         Serial.println("Private key string!\r");
         Serial.println(deviceprivatekey);
-        //App_Parameter_Save(&StrCfg1);
+        App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
       }
       break;
