@@ -77,6 +77,8 @@ static bool bFlagStartAutoMeasuring = true;
 /* Wifi task */
 static bool bFlag1stWifiConnect = true;
 static bool bFlag1stServerConnect = true;
+static bool bFlagUpdatePrivatekey = false;
+static bool bFlagGetJWT = true;
 
 /* Json */
 DynamicJsonDocument MQTT_JsonDoc(1024);
@@ -665,7 +667,6 @@ void setup()
 
 bool vWifiTask(void)
 {
-    static bool bFlagGetJWT = true;
     static bool bReturn = false;
     /* Check flag to conenct wifi */
     if((bDeviceMode == MODE_WIFI)||(bFlagTestConnectionStart == true))
@@ -718,6 +719,15 @@ bool vWifiTask(void)
             Serial.println(getJwt().c_str());
             /* Send jwt */
             App_mqtt_SendJWT(jwt);
+          }
+          if(bFlagUpdatePrivatekey==true)
+          {
+            bFlagUpdatePrivatekey = false;
+            /* Update JWT */
+            device->setPrivateKey(deviceprivatekey);
+            Serial.println("Set private key and recreate jwt");
+            /* Reget jwt */
+            bFlagGetJWT = true;
           }
         }
       }
@@ -920,6 +930,7 @@ void App_BLE_ProcessMsg(uint8_t MsgID, uint8_t MsgLength, uint8_t* pu8Data)
         Serial.println(deviceprivatekey);
         App_Parameter_Save(&StrCfg1);
         App_BLE_SendACK((Msg_teID_Type)MsgID);
+        bFlagUpdatePrivatekey = true;
       }
       break;
     case E_STOP_MEASURE_ID:
